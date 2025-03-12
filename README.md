@@ -1,2 +1,2 @@
 # OT-Frontend
-Frontend application of OT-SAAS 
+Frontend with Backend application of OT-SAAS 
