@@ -8,7 +8,6 @@
         "build": "tsc",
         "start": "node dist/server.js"
     },
-    
     "author": "Rohan",
     "license": "ISC",
     "devDependencies": {
@@ -20,6 +19,7 @@
         "@types/multer": "^1.4.12",
         "@types/node": "^20.4.2",
         "@types/react": "^19.0.10",
+        "bcryptjs": "^3.0.2",
         "ts-node": "^10.9.2",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.1.6"

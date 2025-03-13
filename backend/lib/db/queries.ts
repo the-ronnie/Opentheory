@@ -4,7 +4,12 @@ import { activityLogs, teamMembers, teams, users } from './schema';
 import { parse } from 'cookie';
 import { verifyToken } from '../auth/session';
 
-export async function getUser(req: any) {
+export async function getUser(req?: any) {
+  if (!req || !req.headers) {
+    console.warn('Request object or headers are missing');
+    return null;
+  }
+
   const cookies = parse(req.headers.cookie || '');
   const sessionCookie = cookies.session;
   if (!sessionCookie) {
@@ -79,7 +84,7 @@ export async function getUserWithTeam(userId: number) {
   return result[0];
 }
 
-export async function getActivityLogs(req: any) {
+export async function getActivityLogs(req?: any) {
   const user = await getUser(req);
   if (!user) {
     throw new Error('User not authenticated');

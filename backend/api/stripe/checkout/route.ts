@@ -10,6 +10,7 @@ export async function handleCheckout(req: Request, res: Response) {
   const sessionId = req.query.session_id as string;
 
   if (!sessionId) {
+    console.error('No session_id provided in query parameters.');
     return res.redirect('/pricing');
   }
 
