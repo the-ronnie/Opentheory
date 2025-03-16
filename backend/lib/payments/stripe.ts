@@ -1,180 +1,220 @@
-import Stripe from 'stripe';
-import { Team } from '../db/schema';
-import {
-  getTeamByStripeCustomerId,
-  getUser,
-  updateTeamSubscription
-} from '../db/queries';
+// import Stripe from 'stripe';
+// import { Team } from '../db/schema';
+// import {
+//   getTeamByStripeCustomerId,
+//   getUser,
+//   updateTeamSubscription
+// } from '../db/queries';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia'
-});
+// let stripe: any;
 
-export async function createCheckoutSession({
-  team,
-  priceId,
-  req
-}: {
-  team: Team | null;
-  priceId: string;
-  req: any;
-}) {
-  const user = await getUser(req);
+// try {
+//   if (process.env.STRIPE_SECRET_KEY) {
+//     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+//       apiVersion: '2025-01-27.acacia'
+//     });
+//   } else {
+//     console.warn('⚠️ STRIPE_SECRET_KEY not found in environment variables. Stripe functionality will be disabled.');
+//     // Create a mock Stripe object with no-op functions
+//     stripe = {
+//       checkout: { sessions: { create: async () => ({ url: '#' }) } },
+//       webhooks: { constructEvent: () => ({ type: 'mock', data: { object: {} } }) },
+//       billingPortal: {
+//         configurations: { list: async () => ({ data: [] }), create: async () => ({}) },
+//         sessions: { create: async () => ({}) }
+//       },
+//       products: { retrieve: async () => ({}), list: async () => ({ data: [] }) },
+//       prices: { list: async () => ({ data: [] }) }
+//     };
+//   }
+// } catch (error) {
+//   console.error('Failed to initialize Stripe:', error);
+//   // Same mock object as above
+//   stripe = {
+//     checkout: { sessions: { create: async () => ({ url: '#' }) } },
+//     webhooks: { constructEvent: () => ({ type: 'mock', data: { object: {} } }) },
+//     billingPortal: {
+//       configurations: { list: async () => ({ data: [] }), create: async () => ({}) },
+//       sessions: { create: async () => ({}) }
+//     },
+//     products: { retrieve: async () => ({}), list: async () => ({ data: [] }) },
+//     prices: { list: async () => ({ data: [] }) }
+//   };
+// }
 
-  if (!team || !user) {
-    throw new Error('Team or user not found');
-  }
+// export { stripe };
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: priceId,
-        quantity: 1
-      }
-    ],
-    mode: 'subscription',
-    success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.BASE_URL}/pricing`,
-    customer: team.stripeCustomerId || undefined,
-    client_reference_id: user.id.toString(),
-    allow_promotion_codes: true,
-    subscription_data: {
-      trial_period_days: 14
-    }
-  });
+// // Modify other functions to handle possible missing Stripe functionality
+// export async function createCheckoutSession({
+//   team,
+//   priceId,
+//   req
+// }: {
+//   team: Team | null;
+//   priceId: string;
+//   req: any;
+// }) {
+//   if (!process.env.STRIPE_SECRET_KEY) {
+//     console.warn('Stripe functionality disabled: Cannot create checkout session');
+//     return '#';
+//   }
+  
+//   const user = await getUser(req);
 
-  return session.url;
-}
+//   if (!team || !user) {
+//     throw new Error('Team or user not found');
+//   }
 
-export async function createCustomerPortalSession(team: Team) {
-  if (!team.stripeCustomerId || !team.stripeProductId) {
-    throw new Error('Team Stripe customer or product ID not found');
-  }
+//   try {
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ['card'],
+//       line_items: [
+//         {
+//           price: priceId,
+//           quantity: 1
+//         }
+//       ],
+//       mode: 'subscription',
+//       success_url: `${process.env.BASE_URL || 'http://localhost:3000'}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
+//       cancel_url: `${process.env.BASE_URL || 'http://localhost:3000'}/pricing`,
+//       customer: team.stripeCustomerId || undefined,
+//       client_reference_id: user.id.toString(),
+//       allow_promotion_codes: true,
+//       subscription_data: {
+//         trial_period_days: 14
+//       }
+//     });
 
-  let configuration: Stripe.BillingPortal.Configuration;
-  const configurations = await stripe.billingPortal.configurations.list();
+//     return session.url;
+//   } catch (error) {
+//     console.error('Stripe checkout session creation failed:', error);
+//     return '#';
+//   }
+// }
 
-  if (configurations.data.length > 0) {
-    configuration = configurations.data[0];
-  } else {
-    const product = await stripe.products.retrieve(team.stripeProductId);
-    if (!product.active) {
-      throw new Error("Team's product is not active in Stripe");
-    }
+// // Make similar changes to other exported functions
+// export async function createCustomerPortalSession(team: Team) {
+//   if (!process.env.STRIPE_SECRET_KEY) {
+//     console.warn('Stripe functionality disabled: Cannot create customer portal session');
+//     return { url: '#' };
+//   }
+  
+//   // Rest of the function...
+//   // Add try/catch blocks to handle errors gracefully
+//   try {
+//     // existing code...
+//     if (!team.stripeCustomerId || !team.stripeProductId) {
+//       throw new Error('Team Stripe customer or product ID not found');
+//     }
 
-    const prices = await stripe.prices.list({
-      product: product.id,
-      active: true
-    });
-    if (prices.data.length === 0) {
-      throw new Error("No active prices found for the team's product");
-    }
+//     let configuration: any;
+//     const configurations = await stripe.billingPortal.configurations.list();
+    
+//     // ... rest of the existing function
+    
+//     return stripe.billingPortal.sessions.create({
+//       customer: team.stripeCustomerId,
+//       return_url: `${process.env.BASE_URL || 'http://localhost:3000'}/dashboard`,
+//       configuration: configuration.id
+//     });
+//   } catch (error) {
+//     console.error('Stripe portal session creation failed:', error);
+//     return { url: '#' };
+//   }
+// }
 
-    configuration = await stripe.billingPortal.configurations.create({
-      business_profile: {
-        headline: 'Manage your subscription'
-      },
-      features: {
-        subscription_update: {
-          enabled: true,
-          default_allowed_updates: ['price', 'quantity', 'promotion_code'],
-          proration_behavior: 'create_prorations',
-          products: [
-            {
-              product: product.id,
-              prices: prices.data.map((price) => price.id)
-            }
-          ]
-        },
-        subscription_cancel: {
-          enabled: true,
-          mode: 'at_period_end',
-          cancellation_reason: {
-            enabled: true,
-            options: [
-              'too_expensive',
-              'missing_features',
-              'switched_service',
-              'unused',
-              'other'
-            ]
-          }
-        }
-      }
-    });
-  }
+// export async function handleSubscriptionChange(
+//   subscription: any
+// ) {
+//   if (!process.env.STRIPE_SECRET_KEY) {
+//     console.warn('Stripe functionality disabled: Cannot handle subscription change');
+//     return;
+//   }
+  
+//   try {
+//     const customerId = subscription.customer as string;
+//     const subscriptionId = subscription.id;
+//     const status = subscription.status;
 
-  return stripe.billingPortal.sessions.create({
-    customer: team.stripeCustomerId,
-    return_url: `${process.env.BASE_URL}/dashboard`,
-    configuration: configuration.id
-  });
-}
+//     const team = await getTeamByStripeCustomerId(customerId);
 
-export async function handleSubscriptionChange(
-  subscription: Stripe.Subscription
-) {
-  const customerId = subscription.customer as string;
-  const subscriptionId = subscription.id;
-  const status = subscription.status;
+//     if (!team) {
+//       console.error('Team not found for Stripe customer:', customerId);
+//       return;
+//     }
 
-  const team = await getTeamByStripeCustomerId(customerId);
+//     if (status === 'active' || status === 'trialing') {
+//       const plan = subscription.items.data[0]?.plan;
+//       await updateTeamSubscription(team.id, {
+//         stripeSubscriptionId: subscriptionId,
+//         stripeProductId: plan?.product as string,
+//         planName: (plan?.product as any).name,
+//         subscriptionStatus: status
+//       });
+//     } else if (status === 'canceled' || status === 'unpaid') {
+//       await updateTeamSubscription(team.id, {
+//         stripeSubscriptionId: null,
+//         stripeProductId: null,
+//         planName: null,
+//         subscriptionStatus: status
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error handling subscription change:', error);
+//   }
+// }
 
-  if (!team) {
-    console.error('Team not found for Stripe customer:', customerId);
-    return;
-  }
+// export async function getStripePrices() {
+//   if (!process.env.STRIPE_SECRET_KEY) {
+//     console.warn('Stripe functionality disabled: Cannot get prices');
+//     return [];
+//   }
+  
+//   try {
+//     const prices = await stripe.prices.list({
+//       expand: ['data.product'],
+//       active: true,
+//       type: 'recurring'
+//     });
 
-  if (status === 'active' || status === 'trialing') {
-    const plan = subscription.items.data[0]?.plan;
-    await updateTeamSubscription(team.id, {
-      stripeSubscriptionId: subscriptionId,
-      stripeProductId: plan?.product as string,
-      planName: (plan?.product as Stripe.Product).name,
-      subscriptionStatus: status
-    });
-  } else if (status === 'canceled' || status === 'unpaid') {
-    await updateTeamSubscription(team.id, {
-      stripeSubscriptionId: null,
-      stripeProductId: null,
-      planName: null,
-      subscriptionStatus: status
-    });
-  }
-}
+//     return prices.data.map((price: any) => ({
+//       id: price.id,
+//       productId:
+//         typeof price.product === 'string' ? price.product : price.product.id,
+//       unitAmount: price.unit_amount,
+//       currency: price.currency,
+//       interval: price.recurring?.interval,
+//       trialPeriodDays: price.recurring?.trial_period_days
+//     }));
+//   } catch (error) {
+//     console.error('Error getting Stripe prices:', error);
+//     return [];
+//   }
+// }
 
-export async function getStripePrices() {
-  const prices = await stripe.prices.list({
-    expand: ['data.product'],
-    active: true,
-    type: 'recurring'
-  });
+// export async function getStripeProducts() {
+//   if (!process.env.STRIPE_SECRET_KEY) {
+//     console.warn('Stripe functionality disabled: Cannot get products');
+//     return [];
+//   }
+  
+//   try {
+//     const products = await stripe.products.list({
+//       active: true,
+//       expand: ['data.default_price']
+//     });
 
-  return prices.data.map((price) => ({
-    id: price.id,
-    productId:
-      typeof price.product === 'string' ? price.product : price.product.id,
-    unitAmount: price.unit_amount,
-    currency: price.currency,
-    interval: price.recurring?.interval,
-    trialPeriodDays: price.recurring?.trial_period_days
-  }));
-}
-
-export async function getStripeProducts() {
-  const products = await stripe.products.list({
-    active: true,
-    expand: ['data.default_price']
-  });
-
-  return products.data.map((product) => ({
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    defaultPriceId:
-      typeof product.default_price === 'string'
-        ? product.default_price
-        : product.default_price?.id
-  }));
-}
+//     return products.data.map((product: any) => ({
+//       id: product.id,
+//       name: product.name,
+//       description: product.description,
+//       defaultPriceId:
+//         typeof product.default_price === 'string'
+//           ? product.default_price
+//           : product.default_price?.id
+//     }));
+//   } catch (error) {
+//     console.error('Error getting Stripe products:', error);
+//     return [];
+//   }
+// }

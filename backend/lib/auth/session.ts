@@ -1,6 +1,13 @@
 import { compare, hash } from 'bcryptjs';
 import { serialize, parse } from 'cookie';
 import { NewUser } from '../db/schema';
+import { Request, Response } from 'express';
+
+// Make sure AUTH_SECRET is available
+if (!process.env.AUTH_SECRET) {
+  console.error('AUTH_SECRET environment variable is not set');
+  process.exit(1);
+}
 
 const key = new TextEncoder().encode(process.env.AUTH_SECRET);
 const SALT_ROUNDS = 10;
@@ -16,7 +23,7 @@ export async function comparePasswords(
   return compare(plainTextPassword, hashedPassword);
 }
 
-type SessionData = {
+export type SessionData = {
   user: { id: number };
   expires: string;
 };
@@ -32,32 +39,50 @@ export async function signToken(payload: SessionData) {
 
 export async function verifyToken(input: string) {
   const { jwtVerify } = await import('jose');
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ['HS256'],
-  });
-  return payload as SessionData;
+  try {
+    const { payload } = await jwtVerify(input, key, {
+      algorithms: ['HS256'],
+    });
+    return payload as SessionData;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
 }
 
-export async function getSession(req: any) {
+export async function getSession(req: Request): Promise<SessionData | null> {
   const cookies = parse(req.headers.cookie || '');
   const session = cookies.session;
   if (!session) return null;
   return await verifyToken(session);
 }
 
-export async function setSession(res: any, user: NewUser) {
+export async function setSession(res: Response, user: NewUser) {
+  if (!user.id) {
+    throw new Error('User ID is required');
+  }
+  
   const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const session: SessionData = {
-    user: { id: user.id! },
+    user: { id: user.id },
     expires: expiresInOneDay.toISOString(),
   };
+  
   const encryptedSession = await signToken(session);
   const cookie = serialize('session', encryptedSession, {
     expires: expiresInOneDay,
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
   });
+  
   res.setHeader('Set-Cookie', cookie);
+}
+
+export function clearSession(res: Response) {
+  res.setHeader(
+    'Set-Cookie', 
+    'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax'
+  );
 }
