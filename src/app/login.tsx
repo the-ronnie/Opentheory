@@ -1,0 +1,9 @@
+// ...existing code...
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
+// ...existing code...
+
+// Find where the ArrowPathIcon is being used and make sure it's properly implemented:
+{isLoading && (
+  <ArrowPathIcon className="h-5 w-5 animate-spin text-white" />
+)}
+// ...existing code...

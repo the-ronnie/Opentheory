@@ -1,8 +1,9 @@
-import type { NextConfig } from '@/frontend/node_modules/next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   experimental: {
-    ppr: true,
+    // Remove ppr: true line or set to false
+    // ppr: true,
     newDevOverlay: true
   }
 };

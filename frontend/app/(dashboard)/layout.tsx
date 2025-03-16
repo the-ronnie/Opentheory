@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { CircleIcon, Home, LogOut } from 'lucide-react';
 import {
@@ -11,15 +11,14 @@ import {
   DropdownMenuTrigger
 } from '../../components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { useUser } from '../../../backend/lib/auth';
+import { useUser } from '../../providers/UserProvider';
 import { signOut } from '../(login)/actions';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { userPromise } = useUser();
-  const user = use(userPromise);
+  const { user } = useUser();
   const router = useRouter();
 
   async function handleSignOut() {
@@ -86,11 +85,23 @@ function Header() {
   );
 }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+import { Sidebar } from '../../components/dashboard/sidebar';
+import { TopNav } from '../../components/dashboard/top-nav';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <section className="flex flex-col min-h-screen">
-      <Header />
-      {children}
-    </section>
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <TopNav />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

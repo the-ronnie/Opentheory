@@ -1,146 +1,171 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Globe } from 'lucide-react';
 import { signIn, signUp } from './actions';
-import { ActionState } from '../../../backend/lib/auth/middleware';
 import React from 'react';
+import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
+
+// Define action state type
+type ActionState = {
+  message?: string;
+};
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
   const priceId = searchParams.get('priceId');
   const inviteId = searchParams.get('inviteId');
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    mode === 'signin' ? signIn : signUp,
-    { error: '' },
-  );
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    
+    const formData = new FormData(event.currentTarget);
+    
+    try {
+      // Add IP address
+      formData.append('_ip', '127.0.0.1');
+      
+      // Call the appropriate server action
+      const result = mode === 'signin' 
+        ? await signIn(formData)
+        : await signUp(formData);
+      
+      // If there's a message, it's an error
+      if (result?.message) {
+        setError(result.message);
+        setIsSubmitting(false);
+      }
+      // Otherwise the action redirected successfully
+      
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      setIsSubmitting(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6 flex justify-between items-center">
-        <div className="flex items-center">
-          <div className="bg-orange-500 w-10 h-10 flex items-center justify-center">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
-            >
-              <circle cx="12" cy="12" r="10" fill="white" />
-            </svg>
-          </div>
-          <span className="ml-2 text-xl font-bold">OpenTheory</span>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="p-6 space-y-2">
+          <h2 className="text-2xl font-bold text-center">
+            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+          </h2>
+          <p className="text-sm text-gray-600 text-center">
+            {mode === 'signin'
+              ? "Sign in to access your account"
+              : 'Join our platform and start managing your tasks'}
+          </p>
         </div>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <Globe className="w-5 h-5" />
-        </button>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <h1 className="text-3xl font-normal text-center mb-8">
-            {mode === 'signin' ? 'Log in to your account' : 'Create your account'}
-          </h1>
-
-          <form className="space-y-6" action={formAction}>
-            <input type="hidden" name="redirect" value={redirect || ''} />
-            <input type="hidden" name="priceId" value={priceId || ''} />
-            <input type="hidden" name="inviteId" value={inviteId || ''} />
-
-            {/* Email Form */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                defaultValue={state.email}
-                required
-                maxLength={50}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your email"
-              />
+        
+        <div className="p-6">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+              {error}
             </div>
+          )}
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                defaultValue={state.password}
-                required
-                minLength={8}
-                maxLength={100}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your password"
-              />
-            </div>
-
-            {state?.error && (
-              <div className="text-red-500 text-sm">{state.error}</div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Hidden fields */}
+            {redirect && (
+              <input type="hidden" name="redirect" value={redirect} />
+            )}
+            {priceId && <input type="hidden" name="priceId" value={priceId} />}
+            {inviteId && (
+              <input type="hidden" name="inviteId" value={inviteId} />
             )}
 
-            <Button
+            {/* Form fields */}
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <div className="mt-1">
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Enter your name"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1">
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  required
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder={mode === 'signin' ? 'Enter your password' : 'Create a password'}
+                />
+              </div>
+            </div>
+
+            <Button 
               type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-md font-medium"
-              disabled={pending}
+              className="w-full"
+              disabled={isSubmitting}
             >
-              {pending ? "Loading..." : mode === 'signin' ? 'Sign in' : 'Sign up'}
+              {isSubmitting ? (
+                <>
+                  <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === 'signin' ? 'Signing In...' : 'Creating Account...'}
+                </>
+              ) : (
+                mode === 'signin' ? 'Sign In' : 'Sign Up'
+              )}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="px-4 text-gray-500 text-sm">
-              {mode === 'signin' ? 'New to OpenTheory?' : 'Already have an account?'}
-            </span>
-            <div className="flex-grow border-t border-gray-200"></div>
-          </div>
-
-          <div>
+          <div className="mt-6 text-center text-sm">
+            {mode === 'signin'
+              ? "Don't have an account? "
+              : 'Already have an account? '}
             <Link
-              href={`${mode === 'signin' ? '/sign-up' : '/sign-in'}${
-                redirect ? `?redirect=${redirect}` : ''
-              }${priceId ? `&priceId=${priceId}` : ''}`}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              href={mode === 'signin' ? '/sign-up' : '/sign-in'}
+              className="font-medium text-orange-600 hover:text-orange-500"
             >
-              {mode === 'signin' ? 'Create an account' : 'Sign in to existing account'}
+              {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </Link>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-6 px-6">
-        <div className="flex flex-wrap justify-center gap-x-6 text-sm text-gray-600">
-          <Link href="#" className="hover:underline">
-            Privacy & terms
-          </Link>
-          <Link href="#" className="hover:underline">
-            Cookie policy
-          </Link>
-          <Link href="#" className="hover:underline">
-            Terms of service
-          </Link>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
