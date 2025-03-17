@@ -1,14 +1,15 @@
-import { Router, Request, Response } from "express";
+import express from "express";
+import { Request, Response } from "express";
 import { compare } from 'bcryptjs';
 import { db } from '../lib/db/drizzle';
-import { users, ActivityType } from '../lib/db/schema';
-import { and, eq, isNull } from 'drizzle-orm';
+import { users } from '../lib/db/schema'; // Removed unused ActivityType import
+import { eq } from 'drizzle-orm'; // Removed unused and, isNull imports
 import { setSession, hashPassword, clearSession } from '../lib/auth/session';
 import { getUserByEmail } from '../lib/db/queries';
 import { isAuthenticated } from '../lib/auth/middleware';
-import { logConsultantActivity } from "../lib/utils";
+// Removed unused logConsultantActivity import
 
-const router = Router();
+const router = express.Router();
 
 // Register a new user
 router.post('/register', async (req: Request, res: Response) => {
@@ -82,7 +83,7 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // Logout user
-router.post('/logout', (req: Request, res: Response) => {
+router.post('/logout', (_req: Request, res: Response) => { // Prefixed req with underscore to indicate it's unused
   clearSession(res);
   return res.status(200).json({ message: 'Logged out successfully' });
 });

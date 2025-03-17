@@ -4,7 +4,7 @@
     "description": "Backend for SaaS Starter",
     "main": "server.ts",
     "scripts": {
-        "dev": "nodemon --exec ts-node server.ts",
+        "dev": "nodemon --exec ts-node --files server.ts",
         "build": "tsc",
         "start": "node dist/server.js"
     },
