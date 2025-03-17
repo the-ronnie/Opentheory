@@ -36,7 +36,8 @@
     "backend/**/*.ts",
     "frontend/**/*.ts",
     "frontend/**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/*.ts", "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules"
