@@ -1,65 +1,61 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Globe, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useLoginMutation, useRegisterMutation } from '../../apiSlice/userApiSlice';
 import { useUser } from '../../components/auth/UserProvider';
-import React from 'react';
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect');
-  const priceId = searchParams.get('priceId');
-  const inviteId = searchParams.get('inviteId');
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-  
+  const redirect = searchParams.get('redirect') || '/dashboard';
   const router = useRouter();
-  const { refetch } = useUser();
   
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
   const [register, { isLoading: isRegisterLoading }] = useRegisterMutation();
+  const { setUser } = useUser();
   
-  const isLoading = isLoginLoading || isRegisterLoading;
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
     
     try {
       if (mode === 'signin') {
-        await login({ email, password }).unwrap();
+        const userData = await login({ email, password }).unwrap();
+        setUser(userData);
       } else {
-        await register({ name, email, password }).unwrap();
+        const name = formData.get('name') as string;
+        const userData = await register({ name, email, password }).unwrap();
+        setUser(userData);
       }
       
-      // After successful login/register, update the user context
-      await refetch();
+      // Redirect after successful authentication
+      router.push(redirect);
       
-      // Redirect as needed
-      if (redirect === 'checkout' && priceId) {
-        router.push(`/checkout?priceId=${priceId}`);
-      } else {
-        router.push('/dashboard');
-      }
     } catch (err: any) {
-      setError(err.data?.error || 'Authentication failed. Please try again.');
+      setError(err.data?.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b border-gray-200 py-4 px-6 flex justify-between items-center">
         <div className="flex items-center">
-          <div className="bg-orange-500 w-10 h-10 flex items-center justify-center">
+          <div className="bg-orange-500 w-10 h-10 flex items-center justify-center rounded-full">
             <svg
               width="24"
               height="24"
@@ -68,14 +64,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               xmlns="http://www.w3.org/2000/svg"
               className="text-white"
             >
-              <circle cx="12" cy="12" r="10" fill="white" />
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
             </svg>
           </div>
-          <span className="ml-2 text-xl font-bold">OpenTheory</span>
+          <span className="ml-2 text-xl font-bold">JobBoard</span>
         </div>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <Globe className="w-5 h-5" />
-        </button>
       </header>
 
       {/* Main Content */}
@@ -84,6 +77,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <h1 className="text-3xl font-normal text-center mb-8">
             {mode === 'signin' ? 'Log in to your account' : 'Create your account'}
           </h1>
+
+          {mode === 'signin' && (
+            <p className="text-sm text-center text-gray-500 mb-6">
+              Demo credentials: test@example.com / password123
+            </p>
+          )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Name field for signup */}
@@ -94,8 +93,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 </label>
                 <Input
                   id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  name="name"
                   type="text"
                   autoComplete="name"
                   required
@@ -113,12 +111,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               </label>
               <Input
                 id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
                 type="email"
                 autoComplete="email"
                 required
                 maxLength={50}
+                defaultValue={mode === 'signin' ? 'test@example.com' : ''}
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Enter your email"
               />
@@ -131,13 +129,13 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               </label>
               <Input
                 id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
                 type="password"
                 autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
                 required
-                minLength={8}
+                minLength={6}
                 maxLength={100}
+                defaultValue={mode === 'signin' ? 'password123' : ''}
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Enter your password"
               />
@@ -150,9 +148,9 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             <Button
               type="submit"
               className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-md font-medium"
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                   Loading...
@@ -167,7 +165,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <div className="flex items-center my-6">
             <div className="flex-grow border-t border-gray-200"></div>
             <span className="px-4 text-gray-500 text-sm">
-              {mode === 'signin' ? 'New to OpenTheory?' : 'Already have an account?'}
+              {mode === 'signin' ? 'New to JobBoard?' : 'Already have an account?'}
             </span>
             <div className="flex-grow border-t border-gray-200"></div>
           </div>
@@ -176,7 +174,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             <Link
               href={`${mode === 'signin' ? '/sign-up' : '/sign-in'}${
                 redirect ? `?redirect=${redirect}` : ''
-              }${priceId ? `&priceId=${priceId}` : ''}`}
+              }`}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {mode === 'signin' ? 'Create an account' : 'Sign in to existing account'}
@@ -189,13 +187,10 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       <footer className="py-6 px-6">
         <div className="flex flex-wrap justify-center gap-x-6 text-sm text-gray-600">
           <Link href="#" className="hover:underline">
-            Privacy & terms
+            Privacy Policy
           </Link>
           <Link href="#" className="hover:underline">
-            Cookie policy
-          </Link>
-          <Link href="#" className="hover:underline">
-            Terms of service
+            Terms of Service
           </Link>
         </div>
       </footer>

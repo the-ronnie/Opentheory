@@ -1,20 +1,28 @@
-import './globals.css';
-import type { Metadata, Viewport } from 'next';
-import { Manrope } from 'next/font/google';
+import { Inter } from 'next/font/google';
+import { ThemeProvider } from '../providers/ThemeProvider';
 import { UserProvider } from '../components/auth/UserProvider';
-import { Providers } from './providers';
+import './globals.css';
+import type { Metadata } from 'next';
 import React from 'react';
+import { Navbar } from '../components/navbar';
+import { Providers } from './providers';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.',
+  title: 'JobBoard - Find your next opportunity',
+  description: 'Connect with employers and find your perfect job',
 };
 
-export const viewport: Viewport = {
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
   maximumScale: 1,
 };
-
-const manrope = Manrope({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
@@ -22,14 +30,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`bg-white dark:bg-gray-950 text-black dark:text-white ${manrope.className}`}
-    >
-      <body className="min-h-[100dvh] bg-gray-50">
-        <Providers>
-          <UserProvider>{children}</UserProvider>
-        </Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.variable}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

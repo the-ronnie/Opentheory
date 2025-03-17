@@ -4,30 +4,18 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { CircleIcon, Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { useUser } from './auth/UserProvider';
+import { useAuth } from '../hooks/useAuth';
 import React from 'react';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading } = useUser();
+  const { handleLogout } = useAuth();
 
-  // Check for user on mount
+  // Add scroll event listener
   useEffect(() => {
-    try {
-      const sessionCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('session='));
-        
-      if (sessionCookie) {
-        const token = sessionCookie.split('=')[1];
-        const userData = JSON.parse(atob(decodeURIComponent(token)));
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
-
-    // Add scroll event listener
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -57,12 +45,19 @@ export function Navbar() {
             <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
               Pricing
             </Link>
-            {user ? (
-              <Link href="/dashboard">
-                <Button className="bg-orange-500 hover:bg-orange-600">
+            {!isLoading && user ? (
+              <div className="flex items-center space-x-4">
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
                   Dashboard
+                </Link>
+                <Button 
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Sign out
                 </Button>
-              </Link>
+              </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link href="/sign-in" className="text-gray-600 hover:text-gray-900">
@@ -112,14 +107,25 @@ export function Navbar() {
             >
               Pricing
             </Link>
-            {user ? (
-              <Link 
-                href="/dashboard"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setIsOpen(false)}
-              >
-                Dashboard
-              </Link>
+            {!isLoading && user ? (
+              <>
+                <Link 
+                  href="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  Sign out
+                </button>
+              </>
             ) : (
               <>
                 <Link 
