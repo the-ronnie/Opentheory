@@ -1,146 +1,239 @@
-'use client';
+"use client"
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { CircleIcon, Menu, X } from 'lucide-react';
-import { Button } from './ui/button';
-import React from 'react';
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Code, Home, LifeBuoy, LogOut, Menu, Search, User, Users, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useTheme } from "next-themes"
+import { Moon, Sun } from "lucide-react"
 
-export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [user, setUser] = useState<any>(null);
+// Mock authentication state
+const useAuth = () => {
+  // In a real app, this would be a proper auth hook
+  return {
+    isAuthenticated: false, // Set to false to show unauthenticated view
+    user: {
+      name: "John Doe",
+      email: "john@example.com",
+    },
+  }
+}
 
-  // Check for user on mount
-  useEffect(() => {
-    try {
-      const sessionCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('session='));
-        
-      if (sessionCookie) {
-        const token = sessionCookie.split('=')[1];
-        const userData = JSON.parse(atob(decodeURIComponent(token)));
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
-
-    // Add scroll event listener
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+function ThemeToggle() {
+  const { setTheme, theme } = useTheme()
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
-    }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <CircleIcon className="h-8 w-8 text-orange-500" />
-              <span className="ml-2 text-xl font-bold">JobBoard</span>
-            </Link>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      aria-label="Toggle theme"
+    >
+      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+    </Button>
+  )
+}
+
+export function Navbar() {
+  const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Routes for authenticated users
+  const authenticatedRoutes = [
+    {
+      name: "Home",
+      path: "/",
+      icon: <Home className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <Search className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "My Profile",
+      path: "/profile",
+      icon: <User className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Job Seekers",
+      path: "/job-seekers",
+      icon: <Users className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Support",
+      path: "/support",
+      icon: <LifeBuoy className="h-4 w-4 mr-2" />,
+    },
+  ]
+
+  // Routes for unauthenticated users
+  const unauthenticatedRoutes = [
+    {
+      name: "Pricing",
+      path: "/pricing",
+      icon: null,
+    }
+  ]
+
+  // Choose routes based on authentication state
+  const routes = isAuthenticated ? authenticatedRoutes : unauthenticatedRoutes
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center">
+        <Link href="/" className="flex items-center font-bold text-xl mr-6">
+          <div className="h-9 w-9 rounded-md bg-blue-600 flex items-center justify-center mr-2">
+            <Code className="h-5 w-5 text-white" />
           </div>
-          
-          {/* Desktop menu */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            <Link href="/jobs" className="text-gray-600 hover:text-gray-900">
-              Browse Jobs
-            </Link>
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
-              Pricing
-            </Link>
-            {user ? (
-              <Link href="/dashboard">
-                <Button className="bg-orange-500 hover:bg-orange-600">
-                  Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link href="/sign-in" className="text-gray-600 hover:text-gray-900">
-                  Sign in
-                </Link>
-                <Link href="/sign-up">
-                  <Button className="bg-orange-500 hover:bg-orange-600">
-                    Sign up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
+          OpenTheory
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
+          {routes.map((route) => (
+            <Link
+              key={route.path}
+              href={route.path}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary flex items-center",
+                pathname === route.path ? "text-primary" : "text-muted-foreground",
               )}
-            </button>
-          </div>
+            >
+              {route.icon}
+              {route.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex-1" />
+
+        {/* Theme Toggle (Desktop) */}
+        <div className="hidden md:flex">
+          <ThemeToggle />
         </div>
+
+        {/* User Menu (Desktop) */}
+        {isAuthenticated ? (
+          <div className="hidden md:flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <Link href="/profile">My Account</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/sign-in">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="hidden md:flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/sign-up">Sign Up</Link>
+            </Button>
+          </div>
+        )}
+
+        {/* Mobile Menu Toggle */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden" 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+          <span className="sr-only">Toggle menu</span>
+        </Button>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state */}
-      {isOpen && (
-        <div className="md:hidden bg-white shadow-md">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link 
-              href="/jobs"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              onClick={() => setIsOpen(false)}
-            >
-              Browse Jobs
-            </Link>
-            <Link 
-              href="/pricing"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              onClick={() => setIsOpen(false)}
-            >
-              Pricing
-            </Link>
-            {user ? (
-              <Link 
-                href="/dashboard"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setIsOpen(false)}
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  href="/sign-in"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                  onClick={() => setIsOpen(false)}
+      {/* Simple Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border/40 bg-background">
+          <div className="container py-4">
+            <nav className="flex flex-col gap-4">
+              {routes.map((route) => (
+                <Link
+                  key={route.path}
+                  href={route.path}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary flex items-center py-2",
+                    pathname === route.path ? "text-primary" : "text-muted-foreground",
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  Sign in
+                  {route.icon}
+                  {route.name}
                 </Link>
-                <Link 
-                  href="/sign-up"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign up
-                </Link>
-              </>
-            )}
+              ))}
+              
+              <div className="h-px w-full bg-border/60 my-2" />
+              
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="text-sm font-medium flex items-center py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    My Account
+                  </Link>
+                  <Link
+                    href="/sign-in"
+                    className="text-sm font-medium text-destructive flex items-center py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Log out
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/sign-in"
+                    className="text-sm font-medium transition-colors hover:text-primary flex items-center py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/sign-up"
+                    className="text-sm font-medium transition-colors hover:text-primary flex items-center py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className="text-sm font-medium transition-colors hover:text-primary flex items-center py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Pricing
+                  </Link>
+                </>
+              )}
+              
+              <div className="flex items-center space-x-2 mt-2">
+                <span className="text-sm font-medium">Theme</span>
+                <ThemeToggle />
+              </div>
+            </nav>
           </div>
         </div>
       )}
-    </nav>
-  );
+    </header>
+  )
 }
+
+export default Navbar

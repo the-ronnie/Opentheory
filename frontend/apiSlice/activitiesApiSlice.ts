@@ -14,4 +14,4 @@ export const activitiesApiSlice = baseApiSlice.injectEndpoints({
 
 export const {
   useGetRecentActivitiesQuery,
-} = activitiesApiSlice;
+} = activitiesApiSlice; 
