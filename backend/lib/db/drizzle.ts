@@ -35,3 +35,21 @@ if (process.env.NODE_ENV !== 'development' || process.env.POSTGRES_SSL === 'true
 
 export const client = postgres(process.env.POSTGRES_URL, connectionOptions);
 export const db = drizzle(client, { schema });
+
+// Add a function to test the database connection
+export async function testDatabaseConnection() {
+  try {
+    // Run a simple query to check the connection
+    await client`SELECT 1`;
+    console.log('✅ Successfully connected to the PostgreSQL database');
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to connect to the database:', error);
+    return false;
+  }
+}
+
+// Call the function immediately if this file is being executed directly
+if (require.main === module) {
+  testDatabaseConnection();
+}

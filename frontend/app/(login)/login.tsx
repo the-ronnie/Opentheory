@@ -5,167 +5,200 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { signIn, signUp } from './actions';
+import { Globe, Loader2 } from 'lucide-react';
+import { useLoginMutation, useRegisterMutation } from '../../apiSlice/userApiSlice';
+import { useUser } from '../../components/auth/UserProvider';
 import React from 'react';
-import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
-
-// Define action state type
-type ActionState = {
-  message?: string;
-};
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
   const priceId = searchParams.get('priceId');
   const inviteId = searchParams.get('inviteId');
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
   
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    
-    const formData = new FormData(event.currentTarget);
+  const router = useRouter();
+  const { refetch } = useUser();
+  
+  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [register, { isLoading: isRegisterLoading }] = useRegisterMutation();
+  
+  const isLoading = isLoginLoading || isRegisterLoading;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
     
     try {
-      // Add IP address
-      formData.append('_ip', '127.0.0.1');
-      
-      // Call the appropriate server action
-      const result = mode === 'signin' 
-        ? await signIn(formData)
-        : await signUp(formData);
-      
-      // If there's a message, it's an error
-      if (result?.message) {
-        setError(result.message);
-        setIsSubmitting(false);
+      if (mode === 'signin') {
+        await login({ email, password }).unwrap();
+      } else {
+        await register({ name, email, password }).unwrap();
       }
-      // Otherwise the action redirected successfully
       
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      setIsSubmitting(false);
+      // After successful login/register, update the user context
+      await refetch();
+      
+      // Redirect as needed
+      if (redirect === 'checkout' && priceId) {
+        router.push(`/checkout?priceId=${priceId}`);
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.data?.error || 'Authentication failed. Please try again.');
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6 space-y-2">
-          <h2 className="text-2xl font-bold text-center">
-            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
-          </h2>
-          <p className="text-sm text-gray-600 text-center">
-            {mode === 'signin'
-              ? "Sign in to access your account"
-              : 'Join our platform and start managing your tasks'}
-          </p>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="border-b border-gray-200 py-4 px-6 flex justify-between items-center">
+        <div className="flex items-center">
+          <div className="bg-orange-500 w-10 h-10 flex items-center justify-center">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              <circle cx="12" cy="12" r="10" fill="white" />
+            </svg>
+          </div>
+          <span className="ml-2 text-xl font-bold">OpenTheory</span>
         </div>
-        
-        <div className="p-6">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-              {error}
-            </div>
-          )}
+        <button className="p-2 rounded-full hover:bg-gray-100">
+          <Globe className="w-5 h-5" />
+        </button>
+      </header>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Hidden fields */}
-            {redirect && (
-              <input type="hidden" name="redirect" value={redirect} />
-            )}
-            {priceId && <input type="hidden" name="priceId" value={priceId} />}
-            {inviteId && (
-              <input type="hidden" name="inviteId" value={inviteId} />
-            )}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <h1 className="text-3xl font-normal text-center mb-8">
+            {mode === 'signin' ? 'Log in to your account' : 'Create your account'}
+          </h1>
 
-            {/* Form fields */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Name field for signup */}
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
-                <div className="mt-1">
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    placeholder="Enter your name"
-                  />
-                </div>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  type="text"
+                  autoComplete="name"
+                  required
+                  maxLength={50}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter your name"
+                />
               </div>
             )}
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+
+            {/* Email field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
               </label>
-              <div className="mt-1">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  required
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder={mode === 'signin' ? 'Enter your password' : 'Create a password'}
-                />
-              </div>
+              <Input
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                autoComplete="email"
+                required
+                maxLength={50}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter your email"
+              />
             </div>
 
-            <Button 
+            {/* Password field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <Input
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                required
+                minLength={8}
+                maxLength={100}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            {error && (
+              <div className="text-red-500 text-sm">{error}</div>
+            )}
+
+            <Button
               type="submit"
-              className="w-full"
-              disabled={isSubmitting}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-md font-medium"
+              disabled={isLoading}
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <>
-                  <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === 'signin' ? 'Signing In...' : 'Creating Account...'}
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  Loading...
                 </>
               ) : (
-                mode === 'signin' ? 'Sign In' : 'Sign Up'
+                mode === 'signin' ? 'Sign in' : 'Sign up'
               )}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            {mode === 'signin'
-              ? "Don't have an account? "
-              : 'Already have an account? '}
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="px-4 text-gray-500 text-sm">
+              {mode === 'signin' ? 'New to OpenTheory?' : 'Already have an account?'}
+            </span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          <div>
             <Link
-              href={mode === 'signin' ? '/sign-up' : '/sign-in'}
-              className="font-medium text-orange-600 hover:text-orange-500"
+              href={`${mode === 'signin' ? '/sign-up' : '/sign-in'}${
+                redirect ? `?redirect=${redirect}` : ''
+              }${priceId ? `&priceId=${priceId}` : ''}`}
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              {mode === 'signin' ? 'Sign up' : 'Sign in'}
+              {mode === 'signin' ? 'Create an account' : 'Sign in to existing account'}
             </Link>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="py-6 px-6">
+        <div className="flex flex-wrap justify-center gap-x-6 text-sm text-gray-600">
+          <Link href="#" className="hover:underline">
+            Privacy & terms
+          </Link>
+          <Link href="#" className="hover:underline">
+            Cookie policy
+          </Link>
+          <Link href="#" className="hover:underline">
+            Terms of service
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

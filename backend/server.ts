@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import router from './routes';
 import { optionalAuth } from './lib/auth/middleware';
+import { testDatabaseConnection } from './lib/db/drizzle';
 
 dotenv.config();
 
@@ -37,7 +38,20 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start the server and test the database connection
+const startServer = async () => {
+  try {
+    // Test database connection first
+    await testDatabaseConnection();
+    
+    // Start the server after successful database connection test
+    app.listen(PORT, () => {
+      console.log(`🚀 Backend Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

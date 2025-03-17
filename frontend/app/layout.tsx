@@ -1,27 +1,20 @@
-import { Inter } from 'next/font/google';
-import { StoreProvider } from '../providers/StoreProvider';
-import { UserProvider } from '../providers/UserProvider';
-import { ThemeProvider } from '../providers/ThemeProvider';
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Manrope } from 'next/font/google';
+import { UserProvider } from '../components/auth/UserProvider';
+import { Providers } from './providers';
 import React from 'react';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
 export const metadata: Metadata = {
-  title: 'OT Frontend',
-  description: 'Open Transcription Frontend',
+  title: 'Next.js SaaS Starter',
+  description: 'Get started quickly with Next.js, Postgres, and Stripe.',
 };
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
+export const viewport: Viewport = {
   maximumScale: 1,
 };
+
+const manrope = Manrope({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
@@ -29,15 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.variable}>
-        <ThemeProvider>
-          <StoreProvider>
-            <UserProvider>
-              {children}
-            </UserProvider>
-          </StoreProvider>
-        </ThemeProvider>
+    <html
+      lang="en"
+      className={`bg-white dark:bg-gray-950 text-black dark:text-white ${manrope.className}`}
+    >
+      <body className="min-h-[100dvh] bg-gray-50">
+        <Providers>
+          <UserProvider>{children}</UserProvider>
+        </Providers>
       </body>
     </html>
   );

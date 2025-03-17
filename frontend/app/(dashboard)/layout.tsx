@@ -11,20 +11,26 @@ import {
   DropdownMenuTrigger
 } from '../../components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-import { useUser } from '../../providers/UserProvider';
-import { signOut } from '../(login)/actions';
+import { useUser } from '../../components/auth/UserProvider';
+import { useLogoutMutation } from '../../apiSlice/userApiSlice';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user } = useUser();
+  const { user, isLoading, refetch } = useUser();
+  const [logout] = useLogoutMutation();
   const router = useRouter();
 
   async function handleSignOut() {
-    await signOut(new FormData());
-    router.refresh();
-    router.push('/');
+    try {
+      await logout().unwrap();
+      refetch(); // Refetch the user data to update the authentication state
+      router.refresh();
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
   }
 
   return (
@@ -41,7 +47,7 @@ function Header() {
           >
             Pricing
           </Link>
-          {user ? (
+          {!isLoading && user ? (
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger>
                 <Avatar className="cursor-pointer size-9">
@@ -61,14 +67,12 @@ function Header() {
                     <span>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
-                <form action={handleSignOut} className="w-full">
-                  <button type="submit" className="flex w-full">
-                    <DropdownMenuItem className="w-full flex-1 cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <button onClick={handleSignOut} className="flex w-full">
+                  <DropdownMenuItem className="w-full flex-1 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </button>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -85,23 +89,11 @@ function Header() {
   );
 }
 
-import { Sidebar } from '../../components/dashboard/sidebar';
-import { TopNav } from '../../components/dashboard/top-nav';
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <TopNav />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+    <section className="flex flex-col min-h-screen">
+      <Header />
+      {children}
+    </section>
   );
 }

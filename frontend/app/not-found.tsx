@@ -1,6 +1,9 @@
+'use client'; // Add this directive for components using client features
+
 import Link from 'next/link';
 import { CircleIcon } from 'lucide-react';
 import React from 'react';
+
 export default function NotFound() {
   return (
     <div className="flex items-center justify-center min-h-[100dvh]">
