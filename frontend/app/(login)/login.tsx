@@ -20,11 +20,13 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordMatchError, setPasswordMatchError] = useState<string | null>(null);
   
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setPasswordMatchError(null);
     
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email') as string;
@@ -36,6 +38,14 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
         setUser(userData);
       } else {
         const name = formData.get('name') as string;
+        const confirmPassword = formData.get('confirmPassword') as string;
+        
+        if (password !== confirmPassword) {
+          setPasswordMatchError('Passwords do not match');
+          setIsSubmitting(false);
+          return;
+        }
+        
         const userData = await register({ name, email, password }).unwrap();
         setUser(userData);
       }
@@ -51,11 +61,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white text-gray-900">
       {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6 flex justify-between items-center">
+      <header className="border-b border-gray-100 py-5 px-6 flex justify-between items-center shadow-sm">
         <div className="flex items-center">
-          <div className="bg-orange-500 w-10 h-10 flex items-center justify-center rounded-full">
+          <div className="bg-black w-10 h-10 flex items-center justify-center rounded-full">
             <svg
               width="24"
               height="24"
@@ -67,15 +77,19 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
             </svg>
           </div>
-          <span className="ml-2 text-xl font-bold">JobBoard</span>
+          <span className="ml-3 text-xl font-semibold tracking-tight">
+          <Link href="/" className="hover:text-black transition-colors">
+            OpenTheory
+          </Link>
+          </span>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <h1 className="text-3xl font-normal text-center mb-8">
-            {mode === 'signin' ? 'Log in to your account' : 'Create your account'}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 bg-gray-50">
+        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100">
+          <h1 className="text-2xl font-medium text-center mb-6 text-gray-800">
+            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
           </h1>
 
           {mode === 'signin' && (
@@ -84,12 +98,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             </p>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             {/* Name field for signup */}
             {mode === 'signup' && (
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
+                  Full Name
                 </label>
                 <Input
                   id="name"
@@ -98,8 +112,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                   autoComplete="name"
                   required
                   maxLength={50}
-                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter your name"
+                  className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="John Doe"
                 />
               </div>
             )}
@@ -107,7 +121,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             {/* Email field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                Email Address
               </label>
               <Input
                 id="email"
@@ -117,8 +131,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 required
                 maxLength={50}
                 defaultValue={mode === 'signin' ? 'test@example.com' : ''}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your email"
+                className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                placeholder="name@example.com"
               />
             </div>
 
@@ -136,27 +150,52 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 minLength={6}
                 maxLength={100}
                 defaultValue={mode === 'signin' ? 'password123' : ''}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your password"
+                className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                placeholder="••••••••"
               />
             </div>
 
+            {/* Confirm Password field for signup */}
+            {mode === 'signup' && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  maxLength={100}
+                  className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="••••••••"
+                />
+                {passwordMatchError && (
+                  <p className="text-red-600 text-xs mt-1">{passwordMatchError}</p>
+                )}
+              </div>
+            )}
+
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-100">
+                {error}
+              </div>
             )}
 
             <Button
               type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-md font-medium"
+              className="w-full bg-black hover:bg-gray-800 text-white py-2.5 rounded-md font-medium transition-colors"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                  Loading...
+                  Please wait...
                 </>
               ) : (
-                mode === 'signin' ? 'Sign in' : 'Sign up'
+                mode === 'signin' ? 'Sign in' : 'Create account'
               )}
             </Button>
           </form>
@@ -164,8 +203,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-grow border-t border-gray-200"></div>
-            <span className="px-4 text-gray-500 text-sm">
-              {mode === 'signin' ? 'New to JobBoard?' : 'Already have an account?'}
+            <span className="px-4 text-gray-400 text-sm">
+              {mode === 'signin' ? 'New to OpenTheory?' : 'Already have an account?'}
             </span>
             <div className="flex-grow border-t border-gray-200"></div>
           </div>
@@ -175,7 +214,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               href={`${mode === 'signin' ? '/sign-up' : '/sign-in'}${
                 redirect ? `?redirect=${redirect}` : ''
               }`}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="w-full flex justify-center py-2.5 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors"
             >
               {mode === 'signin' ? 'Create an account' : 'Sign in to existing account'}
             </Link>
@@ -184,13 +223,16 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 px-6">
-        <div className="flex flex-wrap justify-center gap-x-6 text-sm text-gray-600">
-          <Link href="#" className="hover:underline">
+      <footer className="py-6 px-6 border-t border-gray-100 bg-white">
+        <div className="flex flex-wrap justify-center gap-x-8 text-sm text-gray-500">
+          <Link href="#" className="hover:text-black transition-colors">
             Privacy Policy
           </Link>
-          <Link href="#" className="hover:underline">
+          <Link href="#" className="hover:text-black transition-colors">
             Terms of Service
+          </Link>
+          <Link href="/support" className="hover:text-black transition-colors">
+            Contact
           </Link>
         </div>
       </footer>

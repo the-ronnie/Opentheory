@@ -63,21 +63,22 @@ export default function LoginForm({ redirectTo = '/' }: LoginFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-sm font-medium text-gray-700">Email Address</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="Enter your email" 
+                  placeholder="name@example.com" 
                   {...field} 
                   autoComplete="email"
+                  className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs text-red-600" />
             </FormItem>
           )}
         />
@@ -87,22 +88,23 @@ export default function LoginForm({ redirectTo = '/' }: LoginFormProps) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-sm font-medium text-gray-700">Password</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
-                  placeholder="Enter your password" 
+                  placeholder="••••••••" 
                   {...field} 
                   autoComplete="current-password"
+                  className="w-full border border-gray-200 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs text-red-600" />
             </FormItem>
           )}
         />
         
         {generalError && (
-          <Alert variant="destructive" className="mt-5">
+          <Alert variant="destructive" className="mt-4 bg-red-50 border border-red-100 text-red-600">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{generalError}</AlertDescription>
           </Alert>
@@ -110,13 +112,13 @@ export default function LoginForm({ redirectTo = '/' }: LoginFormProps) {
         
         <Button
           type="submit"
-          className="w-full bg-orange-600 hover:bg-orange-700"
+          className="w-full bg-black hover:bg-gray-800 text-white py-2.5 rounded-md font-medium transition-colors mt-2"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
+              Please wait...
             </>
           ) : (
             "Sign in"

@@ -43,12 +43,12 @@ export function Navbar() {
     {
       name: "Dashboard",
       path: "/dashboard",
-      icon: <Search className="h-4 w-4 mr-2" />,
+      icon: <Code className="h-4 w-4 mr-2" />,
     },
     {
-      name: "My Profile",
-      path: "/dashboard/profile",
-      icon: <User className="h-4 w-4 mr-2" />,
+      name: "Jobs",
+      path: "/jobs",
+      icon: <Search className="h-4 w-4 mr-2" />,
     },
     {
       name: "Job Seekers",
@@ -78,10 +78,23 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="flex items-center font-bold text-xl mr-6">
-          <div className="h-9 w-9 rounded-md bg-blue-600 flex items-center justify-center mr-2">
-            <Code className="h-5 w-5 text-white" />
+        <div className="bg-black w-10 h-10 flex items-center justify-center rounded-full">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
+            </svg>
           </div>
-          JobBoard
+          <span className="ml-3 text-xl font-semibold tracking-tight">
+            
+                        OpenTheory
+          
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -116,7 +129,7 @@ export function Navbar() {
         ) : user ? (
           <div className="hidden md:flex items-center gap-4">
             <Button variant="ghost" asChild>
-              <Link href="/dashboard/profile">
+              <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 {user.name || 'My Account'}
               </Link>
@@ -180,7 +193,7 @@ export function Navbar() {
               ) : user ? (
                 <>
                   <Link
-                    href="/dashboard/profile"
+                    href="/profile"
                     className="text-sm font-medium flex items-center py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
