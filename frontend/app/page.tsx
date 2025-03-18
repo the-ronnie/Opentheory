@@ -24,38 +24,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Simulated authentication state - replace with your actual auth logic
-const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState("User");
-
-  // In a real app, fetch the authentication state from your auth provider
-  useEffect(() => {
-    // Check if user is authenticated (this is a placeholder)
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      // In a real app, you would decode the token or fetch user data
-      setUsername(localStorage.getItem('username') || "User");
-    }
-  }, []);
-
-  // For demo purposes
-  const toggleAuth = () => {
-    setIsAuthenticated(!isAuthenticated);
-    if (!isAuthenticated) {
-      localStorage.setItem('token', 'demo-token');
-      localStorage.setItem('username', 'John');
-      setUsername('John');
-    } else {
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-    }
-  };
-
-  return { isAuthenticated, username, toggleAuth };
-};
+import { useUser } from '@/components/auth/UserProvider';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Sample data for authenticated dashboard
 const jobSeekers = [
@@ -95,24 +65,16 @@ const jobs = [
 ];
 
 export default function HomePage() {
-  const { isAuthenticated, username, toggleAuth } = useAuth();
-
+  const { user } = useUser();
+  
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Navbar />
       
-      {/* Demo toggle - remove in production */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button 
-          onClick={toggleAuth}
-          className="bg-black hover:bg-gray-800 text-white"
-        >
-          Demo: {isAuthenticated ? "Logout" : "Login"}
-        </Button>
-      </div>
-
-      {isAuthenticated ? (
-        <AuthenticatedView username={username} />
+      {user ? (
+        <ProtectedRoute>
+          <AuthenticatedView username={user.name ?? 'Guest'} />
+        </ProtectedRoute>
       ) : (
         <UnauthenticatedView />
       )}
@@ -433,12 +395,12 @@ function AuthenticatedView({ username }: { username: string }) {
   return (
     <>
       {/* Welcome Banner */}
-      <section className="w-full py-8 md:py-12 bg-black text-white">
+      <section className="w-full py-10 md:py-14 bg-gradient-to-r from-black to-gray-800 text-white">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {username}</h1>
-              <p className="text-gray-400 mt-1">Here's what's happening with your job seekers today.</p>
+              <h1 className="text-2xl md:text-4xl font-bold">Welcome back, {username}</h1>
+              <p className="text-gray-300 mt-2 text-lg">Here's what's happening with your job seekers today.</p>
             </div>
             <div className="flex gap-3">
               <Button asChild className="bg-white text-black hover:bg-gray-200">
@@ -447,7 +409,7 @@ function AuthenticatedView({ username }: { username: string }) {
                   Go to Dashboard
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+              <Button asChild variant="outline" className="border-gray-400 text-white hover:bg-gray-700">
                 <Link href="/support">
                   <Search className="mr-2 h-4 w-4" />
                   Get Support
@@ -459,158 +421,161 @@ function AuthenticatedView({ username }: { username: string }) {
       </section>
 
       {/* Dashboard Overview */}
-      <section className="w-full py-8 bg-gray-50">
+      <section className="w-full py-10 bg-gray-50">
         <div className="container px-4 md:px-6 mx-auto">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card className="bg-white border-gray-200">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Job Seekers</CardTitle>
-                <Users className="h-4 w-4 text-gray-500" />
+                <CardTitle className="text-sm font-medium text-gray-600">Job Seekers</CardTitle>
+                <Users className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{totalJobSeekers}</div>
-                <p className="text-xs text-gray-500">Candidates under your management</p>
+                <div className="text-3xl font-bold text-gray-900">{totalJobSeekers}</div>
+                <p className="text-xs text-gray-500 mt-1">Candidates under your management</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Available Jobs</CardTitle>
-                <Briefcase className="h-4 w-4 text-gray-500" />
+                <CardTitle className="text-sm font-medium text-gray-600">Available Jobs</CardTitle>
+                <Briefcase className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{totalJobs}</div>
-                <p className="text-xs text-gray-500">Currently in our database</p>
+                <div className="text-3xl font-bold text-gray-900">{totalJobs}</div>
+                <p className="text-xs text-gray-500 mt-1">Currently in our database</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Potential Matches</CardTitle>
-                <CheckCircle className="h-4 w-4 text-gray-500" />
+                <CardTitle className="text-sm font-medium text-gray-600">Potential Matches</CardTitle>
+                <CheckCircle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{potentialMatches}</div>
-                <p className="text-xs text-gray-500">Based on skills and requirements</p>
+                <div className="text-3xl font-bold text-gray-900">{potentialMatches}</div>
+                <p className="text-xs text-gray-500 mt-1">Based on skills and requirements</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Recent Activity</CardTitle>
-                <Clock className="h-4 w-4 text-gray-500" />
+                <CardTitle className="text-sm font-medium text-gray-600">Recent Activity</CardTitle>
+                <Clock className="h-4 w-4 text-purple-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">12</div>
-                <p className="text-xs text-gray-500">New activities in the last 24 hours</p>
+                <div className="text-3xl font-bold text-gray-900">12</div>
+                <p className="text-xs text-gray-500 mt-1">New activities in the last 24 hours</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Job Seekers Card */}
-          <Card className="bg-white border-gray-200 mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl text-gray-900">Your Job Seekers</CardTitle>
-                <Button variant="outline" size="sm" asChild className="text-gray-500 border-gray-200 hover:bg-gray-100">
-                  <Link href="/dashboard">View All</Link>
-                </Button>
-              </div>
-              <CardDescription className="text-gray-500">
-                Manage and monitor your job seekers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {jobSeekers.map((jobSeeker) => (
-                  <div
-                    key={jobSeeker.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                      {jobSeeker.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{jobSeeker.name}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {jobSeeker.skills.slice(0, 3).join(", ")}
-                        {jobSeeker.skills.length > 3 && "..."}
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" asChild className="text-gray-500 hover:text-gray-700">
-                      <Link href={`/dashboard?id=${jobSeeker.id}`}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard">
-                  View Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Recent Jobs */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-xl text-gray-900">Recent Jobs</CardTitle>
-              <CardDescription className="text-gray-500">
-                Latest job opportunities matching your candidates' skills
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {jobs.map((job) => (
-                  <div key={job.id} className="p-4 border border-gray-100 rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{job.title}</h3>
-                        <p className="text-sm text-gray-500">
-                          {job.company} • {job.location}
+          {/* Job Seekers & Recent Jobs section */}
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Job Seekers Card */}
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl text-gray-900">Your Job Seekers</CardTitle>
+                  <Button variant="outline" size="sm" asChild className="text-gray-500 border-gray-200 hover:bg-gray-100">
+                    <Link href="/dashboard">View All</Link>
+                  </Button>
+                </div>
+                <CardDescription className="text-gray-500">
+                  Manage and monitor your job seekers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {jobSeekers.map((jobSeeker) => (
+                    <div
+                      key={jobSeeker.id}
+                      className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                        {jobSeeker.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{jobSeeker.name}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {jobSeeker.skills.slice(0, 3).join(", ")}
+                          {jobSeeker.skills.length > 3 && "..."}
                         </p>
                       </div>
-                      <div className="text-xs font-medium text-black bg-gray-100 px-2 py-1 rounded-full">
-                        {job.type}
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {job.skills.map((skill) => (
-                        <span 
-                          key={skill} 
-                          className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-3 flex justify-between items-center">
-                      <p className="text-sm font-medium text-gray-900">{job.salary}</p>
-                      <Button size="sm" className="bg-black hover:bg-gray-900 text-white">
-                        View Details
+                      <Button variant="ghost" size="sm" asChild className="text-gray-500 hover:text-gray-700">
+                        <Link href={`/dashboard?id=${jobSeeker.id}`}>
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
                       </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/jobs">
-                  <Search className="mr-2 h-4 w-4" />
-                  Search All Jobs
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/dashboard">
+                    View Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Recent Jobs */}
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+              <CardHeader>
+                <CardTitle className="text-xl text-gray-900">Recent Jobs</CardTitle>
+                <CardDescription className="text-gray-500">
+                  Latest job opportunities matching your candidates' skills
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {jobs.map((job) => (
+                    <div key={job.id} className="p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors duration-150">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">{job.title}</h3>
+                          <p className="text-sm text-gray-500">
+                            {job.company} • {job.location}
+                          </p>
+                        </div>
+                        <div className="text-xs font-medium text-black bg-gray-100 px-2 py-1 rounded-full">
+                          {job.type}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {job.skills.map((skill) => (
+                          <span 
+                            key={skill} 
+                            className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex justify-between items-center">
+                        <p className="text-sm font-medium text-gray-900">{job.salary}</p>
+                        <Button size="sm" className="bg-black hover:bg-gray-900 text-white">
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/jobs">
+                    <Search className="mr-2 h-4 w-4" />
+                    Search All Jobs
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
         </div>
       </section>
 
       {/* Quick Actions */}
-      <section className="w-full py-6 bg-white border-t border-gray-200">
+      <section className="w-full py-8 bg-white border-t border-gray-200">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
@@ -618,7 +583,7 @@ function AuthenticatedView({ username }: { username: string }) {
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100"
+                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Link href="/dashboard">
                   <Upload className="mr-2 h-4 w-4" />
@@ -628,7 +593,7 @@ function AuthenticatedView({ username }: { username: string }) {
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100"
+                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Link href="/jobs">
                   <Search className="mr-2 h-4 w-4" />
@@ -638,7 +603,7 @@ function AuthenticatedView({ username }: { username: string }) {
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100"
+                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Link href="/support">
                   <FileText className="mr-2 h-4 w-4" />

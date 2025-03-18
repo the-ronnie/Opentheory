@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navbar } from "@/components/navbar";
 import { useUser } from '@/components/auth/UserProvider';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 
 // Using the job seekers data from the main page for now
 const jobSeekers = [
@@ -25,7 +26,7 @@ const jobSeekers = [
   { id: 3, name: "Carol Williams", skills: ["Java", "Spring Boot", "AWS"] }
 ];
 
-export default function ProfilePage() {
+function ProfilePage() {
   const { user } = useUser();
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeSection, setActiveSection] = useState('bio'); // Replace tabs with this state
@@ -316,5 +317,13 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function Profile() {
+  return (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
   );
 }
