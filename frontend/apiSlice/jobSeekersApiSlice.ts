@@ -32,8 +32,9 @@ export type JobSeekerSearchParams = {
 export const jobSeekersApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getJobSeekersForConsultant: builder.query<JobSeeker[], { consultantId: string; queryParams?: QueryParams }>({
-      query: ({ consultantId, queryParams = { limit: 50, offset: 0 } }) => 
-        `/job-seekers?consultantId=${consultantId}&limit=${queryParams.limit}&offset=${queryParams.offset}`,
+      query: ({ consultantId, queryParams = { limit: 50, offset: 0 } }) => {
+        return `/job-seekers/consultant/${consultantId}?limit=${queryParams.limit}&offset=${queryParams.offset}`;
+      },
       providesTags: ['JobSeeker'],
     }),
     
