@@ -30,15 +30,15 @@ router.post('/', async (req: Request, res: Response) => {
       about 
     } = req.body;
     
-    // Validate consultant exists
-    const consultant = await getConsultantById(consultantId);
+    // Validate consultant exists - convert to number
+    const consultant = await getConsultantById(Number(consultantId));
     if (!consultant) {
       return res.status(404).json({ error: 'Consultant not found' });
     }
     
-    // Create job seeker
+    // Create job seeker - ensure consultantId is a number
     const jobSeeker = await createJobSeeker({
-      consultantId,
+      consultantId: Number(consultantId),
       name,
       email,
       phone,
@@ -53,7 +53,7 @@ router.post('/', async (req: Request, res: Response) => {
     // Log activity
     await logJobSeekerActivity(
       req,
-      consultantId,
+      Number(consultantId), // Convert to number to match updated function signature
       jobSeeker.id,
       ActivityType.JOB_SEEKER_ADDED,
       `Job seeker ${name} added`
@@ -69,7 +69,7 @@ router.post('/', async (req: Request, res: Response) => {
 // Get job seekers by consultant ID
 router.get('/consultant/:consultantId', async (req: Request, res: Response) => {
   try {
-    const consultantId = req.params.consultantId;
+    const consultantId = Number(req.params.consultantId); // Convert string to number
     const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
     
@@ -164,7 +164,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     // Log activity
     await logJobSeekerActivity(
       req,
-      existingJobSeeker.consultantId,
+      Number(existingJobSeeker.consultantId), // Convert to number to match updated function
       jobSeekerId,
       ActivityType.JOB_SEEKER_UPDATED,
       `Job seeker ${name || existingJobSeeker.name} updated`
@@ -191,7 +191,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     // Log activity before deletion
     await logJobSeekerActivity(
       req,
-      existingJobSeeker.consultantId,
+      Number(existingJobSeeker.consultantId), // Convert to number to match updated function
       jobSeekerId,
       ActivityType.JOB_SEEKER_DELETED,
       `Job seeker ${existingJobSeeker.name} deleted`

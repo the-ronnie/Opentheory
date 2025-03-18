@@ -15,17 +15,12 @@ import { useUser } from '../../components/auth/UserProvider';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import React from 'react';
+import { LogoutButton } from '../../components/auth/LogoutButton';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-
-  const handleLogout = () => {
-    // Clear cookie and redirect
-    document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    router.push('/sign-in');
-  };
 
   return (
     <header className="border-b border-gray-200">
@@ -39,41 +34,37 @@ function Header() {
             href="/jobs"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            Browse Jobs
+            Jobs
           </Link>
-          {user ? (
-            <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <DropdownMenuTrigger>
-                <Avatar className="cursor-pointer size-9">
-                  <AvatarImage alt={user.name || ''} />
+          <Link
+            href="/job-seekers"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Job Seekers
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/avatar.png" alt={user?.name || ''} />
                   <AvatarFallback>
-                    {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                    {user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="flex flex-col gap-1">
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/dashboard" className="flex w-full items-center">
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                </DropdownMenuItem>
-                <button onClick={handleLogout} className="flex w-full">
-                  <DropdownMenuItem className="w-full flex-1 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              asChild
-              className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-4 py-2 rounded-full"
-            >
-              <Link href="/sign-up">Sign Up</Link>
-            </Button>
-          )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="cursor-pointer">Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <LogoutButton className="cursor-pointer w-full flex items-center">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </LogoutButton>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
@@ -82,6 +73,7 @@ function Header() {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
+    // This entire layout is protected - only authenticated users can access
     <ProtectedRoute>
       <section className="flex flex-col min-h-screen">
         <Header />

@@ -6,40 +6,39 @@ import {
   timestamp,
   integer,
   uuid,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Existing users table
+// Merged users and consultants table
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }),
+  name: varchar('name', { length: 100 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: varchar('role', { length: 20 }).notNull().default('member'),
+  
+  // Consultant-specific fields ( all users are consultants)
+  isPaid: boolean('is_paid').default(false), // Flag for paid users/consultants
+  phone: varchar('phone', { length: 20 }).unique(),
+  avatar: text('avatar'),
+  bio: text('bio'),
+  company: text('company'),
+  position: text('position'),
+  location: text('location'),
+  
+  // Common timestamp fields
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
 });
 
-// Tables for the consultant job platform
-export const consultants = pgTable('consultants', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  phone: text('phone').unique(),
-  avatar: text('avatar').notNull(),
-  bio: text('bio'),
-  company: text('company'),
-  position: text('position'),
-  location: text('location'),
-  joinedDate: timestamp('joined_date').notNull().defaultNow(),
-});
-
 export const jobSeekers = pgTable('job_seekers', {
   id: uuid('id').defaultRandom().primaryKey(),
-  consultantId: uuid('consultant_id')
+  // Consultant ID references users table
+  consultantId: integer('consultant_id')
     .notNull()
-    .references(() => consultants.id, { onDelete: 'cascade' }),
+    .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   phone: text('phone').notNull().unique(),
@@ -66,11 +65,12 @@ export const jobs = pgTable('jobs', {
   status: text('status').notNull().default('active'),
 });
 
-// New activity logs table for job platform
+// Activity logs table 
 export const jobActivityLogs = pgTable('job_activity_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
-  consultantId: uuid('consultant_id').references(() => consultants.id, { onDelete: 'set null' }),
-  entityType: varchar('entity_type', { length: 20 }).notNull(), // 'consultant', 'jobseeker', 'job'
+  // User ID (consultant) references users table
+  consultantId: integer('consultant_id').references(() => users.id, { onDelete: 'set null' }),
+  entityType: varchar('entity_type', { length: 20 }).notNull(), // 'user', 'jobseeker', 'job'
   entityId: text('entity_id').notNull(),
   action: varchar('action', { length: 50 }).notNull(),
   details: text('details'),
@@ -78,26 +78,23 @@ export const jobActivityLogs = pgTable('job_activity_logs', {
   timestamp: timestamp('timestamp').notNull().defaultNow(),
 });
 
-// Relations for users
-export const usersRelations = relations(users, ({ }) => ({}));
-
-// Relations for consultant job platform
-export const consultantsRelations = relations(consultants, ({ many }) => ({
+// Relations for users (including consultant relations)
+export const usersRelations = relations(users, ({ many }) => ({
   jobSeekers: many(jobSeekers),
   activityLogs: many(jobActivityLogs),
 }));
 
 export const jobSeekersRelations = relations(jobSeekers, ({ one }) => ({
-  consultant: one(consultants, {
+  consultant: one(users, {
     fields: [jobSeekers.consultantId],
-    references: [consultants.id],
+    references: [users.id],
   }),
 }));
 
 export const jobActivityLogsRelations = relations(jobActivityLogs, ({ one }) => ({
-  consultant: one(consultants, {
+  consultant: one(users, {
     fields: [jobActivityLogs.consultantId],
-    references: [consultants.id],
+    references: [users.id],
   }),
 }));
 
@@ -105,9 +102,7 @@ export const jobActivityLogsRelations = relations(jobActivityLogs, ({ one }) => 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
-// Type exports for consultant job platform
-export type Consultant = typeof consultants.$inferSelect;
-export type NewConsultant = typeof consultants.$inferInsert;
+// Update type exports for job platform
 export type JobSeeker = typeof jobSeekers.$inferSelect;
 export type NewJobSeeker = typeof jobSeekers.$inferInsert;
 export type Job = typeof jobs.$inferSelect;
@@ -116,7 +111,7 @@ export type JobActivityLog = typeof jobActivityLogs.$inferSelect;
 export type NewJobActivityLog = typeof jobActivityLogs.$inferInsert;
 
 export enum ActivityType {
-  // Existing activity types
+  // User activity types
   SIGN_UP = 'SIGN_UP',
   SIGN_IN = 'SIGN_IN',
   SIGN_OUT = 'SIGN_OUT',
@@ -124,7 +119,7 @@ export enum ActivityType {
   DELETE_ACCOUNT = 'DELETE_ACCOUNT',
   UPDATE_ACCOUNT = 'UPDATE_ACCOUNT',
   
-  // New activity types for job platform
+  // Job platform activity types
   CONSULTANT_CREATED = 'CONSULTANT_CREATED',
   CONSULTANT_UPDATED = 'CONSULTANT_UPDATED',
   JOB_SEEKER_ADDED = 'JOB_SEEKER_ADDED',

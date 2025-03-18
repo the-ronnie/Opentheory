@@ -16,17 +16,17 @@ export function getIP(req: Request): string | undefined {
   return req.socket.remoteAddress;
 }
 
-// Activity logging helpers
+// Activity logging helpers - FIXED: Changed consultantId type from string to number
 export async function logConsultantActivity(
   req: Request,
-  consultantId: string,
+  consultantId: number, // Changed from string to number
   action: ActivityType,
   details?: string
 ) {
   return await logActivity({
     consultantId,
-    entityType: 'consultant',
-    entityId: consultantId,
+    entityType: 'user',
+    entityId: String(consultantId), // Convert to string for entityId
     action,
     details,
     ipAddress: getIP(req)
@@ -35,7 +35,7 @@ export async function logConsultantActivity(
 
 export async function logJobSeekerActivity(
   req: Request,
-  consultantId: string,
+  consultantId: number, // Changed from string to number
   jobSeekerId: string,
   action: ActivityType,
   details?: string
@@ -52,7 +52,7 @@ export async function logJobSeekerActivity(
 
 export async function logJobActivity(
   req: Request,
-  consultantId: string | undefined,
+  consultantId: number | undefined, // Changed from string|undefined to number|undefined
   jobId: string,
   action: ActivityType,
   details?: string
