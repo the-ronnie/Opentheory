@@ -13,10 +13,10 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Navbar } from "@/components/navbar";
-import { useUser } from '@/components/auth/UserProvider';
+import { Button } from '../../components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { Navbar } from "../../components/navbar";
+import { useUser } from '../../components/auth/UserProvider';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 
 // Using the job seekers data from the main page for now
@@ -326,4 +326,7 @@ export default function Profile() {
       <ProfilePage />
     </ProtectedRoute>
   );
+
+
+  
 }
