@@ -1,12 +1,11 @@
 import { desc, eq, and, like, gte, isNull, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { consultants, jobSeekers, jobs, users, jobActivityLogs, ActivityType } from './schema';
+import { jobSeekers, jobs, users, jobActivityLogs, ActivityType } from './schema';
 import { Request } from 'express';
 
 // User queries
 export async function getUser(req: Request) {
   // This function would need to be implemented based on your session handling
-  // For now, it returns null
   if (!req.cookies?.session) {
     return null;
   }
@@ -43,51 +42,32 @@ export async function getUserByEmail(email: string) {
   return result.length > 0 ? result[0] : null;
 }
 
-// Consultant queries
-export async function createConsultant(data: {
-  name: string;
-  email: string;
-  phone: string;
-  avatar: string;
-  bio?: string;
-  company?: string;
-  position?: string;
-  location?: string;
-}) {
-  const result = await db.insert(consultants).values(data).returning();
-  return result[0];
-}
-
-export async function getConsultantById(id: string) {
-  const result = await db
-    .select()
-    .from(consultants)
-    .where(eq(consultants.id, id))
-    .limit(1);
-  
-  return result.length > 0 ? result[0] : null;
-}
-
-export async function getConsultantByEmail(email: string) {
-  const result = await db
-    .select()
-    .from(consultants)
-    .where(eq(consultants.email, email))
-    .limit(1);
-  
-  return result.length > 0 ? result[0] : null;
-}
-
+// Get all users with consultant role
 export async function getAllConsultants(limit = 50, offset = 0) {
   return await db
     .select()
-    .from(consultants)
-    .orderBy(desc(consultants.joinedDate))
+    .from(users)
+    .where(and(
+      eq(users.role, 'member'), // Changed from 'consultant' to 'member'
+      isNull(users.deletedAt)
+    ))
+    .orderBy(desc(users.createdAt))
     .limit(limit)
     .offset(offset);
 }
 
-export async function updateConsultant(id: string, data: Partial<{
+// Get consultant by ID - for backwards compatibility
+export async function getConsultantById(id: number) {
+  return await getUserById(id);
+}
+
+// Get consultant by email - for backwards compatibility
+export async function getConsultantByEmail(email: string) {
+  return await getUserByEmail(email);
+}
+
+// Update user profile, unified for all user types
+export async function updateUserProfile(id: number, data: Partial<{
   name: string;
   phone: string;
   avatar: string;
@@ -95,11 +75,15 @@ export async function updateConsultant(id: string, data: Partial<{
   company: string;
   position: string;
   location: string;
+  isPaid: boolean;
 }>) {
   const result = await db
-    .update(consultants)
-    .set(data)
-    .where(eq(consultants.id, id))
+    .update(users)
+    .set({
+      ...data,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, id))
     .returning();
   
   return result.length > 0 ? result[0] : null;
@@ -107,7 +91,7 @@ export async function updateConsultant(id: string, data: Partial<{
 
 // JobSeeker queries
 export async function createJobSeeker(data: {
-  consultantId: string;
+  consultantId: number; // Changed to number to match users.id
   name: string;
   email: string;
   phone: string;
@@ -118,7 +102,10 @@ export async function createJobSeeker(data: {
   location: string;
   about: string;
 }) {
-  const result = await db.insert(jobSeekers).values(data).returning();
+  const result = await db.insert(jobSeekers).values({
+    ...data,
+    addedDate: new Date()
+  }).returning();
   return result[0];
 }
 
@@ -132,7 +119,7 @@ export async function getJobSeekerById(id: string) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function getJobSeekersForConsultant(consultantId: string, limit = 50, offset = 0) {
+export async function getJobSeekersForConsultant(consultantId: number, limit = 50, offset = 0) {
   return await db
     .select()
     .from(jobSeekers)
@@ -146,6 +133,7 @@ export async function searchJobSeekers(params: {
   skills?: string[];
   location?: string;
   experience?: number;
+  consultantId?: number; // Added to filter by consultant ID
   limit?: number;
   offset?: number;
 }) {
@@ -153,6 +141,11 @@ export async function searchJobSeekers(params: {
   
   // Build conditions list
   const conditions = [];
+  
+  // Add consultant filter if provided
+  if (params.consultantId !== undefined) {
+    conditions.push(eq(jobSeekers.consultantId, params.consultantId));
+  }
   
   if (params.skills && params.skills.length > 0) {
     for (const skill of params.skills) {
@@ -221,6 +214,7 @@ export async function createJob(data: {
     .values({
       ...data,
       status: 'active',
+      postedDate: new Date()
     })
     .returning();
   
@@ -322,10 +316,10 @@ export async function closeJob(id: string) {
   return result.length > 0 ? result[0] : null;
 }
 
-// Activity logging functions
+// Activity logging functions - updated to use number for consultant IDs
 export async function logActivity(data: {
-  consultantId?: string;
-  entityType: 'consultant' | 'jobseeker' | 'job';
+  consultantId?: number; // Changed from string to number
+  entityType: 'user' | 'jobseeker' | 'job'; // Changed from 'consultant' to 'user'
   entityId: string;
   action: ActivityType;
   details?: string;
@@ -336,29 +330,31 @@ export async function logActivity(data: {
     entityType: data.entityType,
     entityId: data.entityId,
     action: data.action,
-    details: data.details,
-    ipAddress: data.ipAddress
+    details: data.details || '',
+    ipAddress: data.ipAddress || 'unknown',
+    timestamp: new Date()
   }).returning();
   
   return result[0];
 }
 
-export async function getActivitiesForConsultant(
-  consultantId: string,
+// Renamed from getActivitiesForConsultant to getActivitiesForUser
+export async function getActivitiesForUser(
+  userId: number, // Changed from string to number
   limit = 50,
   offset = 0
 ) {
   return await db
     .select()
     .from(jobActivityLogs)
-    .where(eq(jobActivityLogs.consultantId, consultantId))
+    .where(eq(jobActivityLogs.consultantId, userId))
     .orderBy(desc(jobActivityLogs.timestamp))
     .limit(limit)
     .offset(offset);
 }
 
 export async function getActivitiesForEntity(
-  entityType: 'consultant' | 'jobseeker' | 'job',
+  entityType: 'user' | 'jobseeker' | 'job', // Changed from 'consultant' to 'user'
   entityId: string,
   limit = 50,
   offset = 0

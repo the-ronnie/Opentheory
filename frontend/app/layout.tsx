@@ -1,10 +1,8 @@
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '../providers/ThemeProvider';
-import { UserProvider } from '../components/auth/UserProvider';
 import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
-import { Navbar } from '../components/navbar';
 import { Providers } from './providers';
 
 const inter = Inter({
@@ -32,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
