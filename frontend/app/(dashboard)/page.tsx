@@ -3,17 +3,52 @@
 import React from 'react';
 import { useUser } from '../../components/auth/UserProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { BriefcaseIcon, BookmarkIcon, UsersIcon, BellIcon } from 'lucide-react';
-import { Terminal } from './terminal';
+import { BriefcaseIcon, BookmarkIcon, UsersIcon, BellIcon, Loader2 } from 'lucide-react';
+import { useGetUserActivitiesQuery } from '../../apiSlice/userApiSlice';
+
+interface ActivityLog {
+  connections: { total: number; new: number };
+  notifications: { total: number; unread: number };
+  recommendations?: Array<{ id?: string; title: string; company: string; locationType: string; status: string }>;
+  applications?: { active: number; new: number };
+  savedJobs?: { total: number; new: number };
+}
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const { data: userActivities, isLoading, error } = useGetUserActivitiesQuery({ userId: user?.id || 0 }) as { data: ActivityLog | undefined; isLoading: boolean; error: unknown };
   
   // Get the current time of day to customize greeting
   const hour = new Date().getHours();
   let greeting = "Good morning";
   if (hour >= 12 && hour < 18) greeting = "Good afternoon";
   else if (hour >= 18) greeting = "Good evening";
+
+  // Extract stats from API data or provide defaults
+  const stats = {
+    activeApplications: userActivities?.applications?.active || 0,
+    newApplications: userActivities?.applications?.new || 0,
+    savedJobs: userActivities?.savedJobs?.total || 0,
+    newSavedJobs: userActivities?.savedJobs?.new || 0,
+    connections: userActivities?.connections?.total || 0,
+    newConnections: userActivities?.connections?.new || 0,
+    notifications: userActivities?.notifications?.total || 0,
+    unreadNotifications: userActivities?.notifications?.unread || 0,
+  };
+
+  // Get job recommendations from API data
+  const jobRecommendations = userActivities?.recommendations || [];
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading dashboard data</h3>
+          <p className="text-gray-600">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -35,8 +70,17 @@ export default function DashboardPage() {
             <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">3 new this week</p>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.activeApplications}</div>
+                <p className="text-xs text-muted-foreground">{stats.newApplications} new this week</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -45,8 +89,17 @@ export default function DashboardPage() {
             <BookmarkIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">5 new since yesterday</p>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.savedJobs}</div>
+                <p className="text-xs text-muted-foreground">{stats.newSavedJobs} new since yesterday</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -55,8 +108,17 @@ export default function DashboardPage() {
             <UsersIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+2 from last week</p>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.connections}</div>
+                <p className="text-xs text-muted-foreground">+{stats.newConnections} from last week</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -65,8 +127,17 @@ export default function DashboardPage() {
             <BellIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">1 requires your attention</p>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.notifications}</div>
+                <p className="text-xs text-muted-foreground">{stats.unreadNotifications} requires your attention</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -80,48 +151,42 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center border-b pb-2">
-              <div>
-                <h3 className="font-medium">Senior Software Engineer</h3>
-                <p className="text-sm text-muted-foreground">TechCorp Inc. • Remote</p>
-              </div>
-              <span className="text-sm font-medium bg-green-100 text-green-800 py-1 px-2 rounded">
-                New
-              </span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-            <div className="flex justify-between items-center border-b pb-2">
-              <div>
-                <h3 className="font-medium">Full Stack Developer</h3>
-                <p className="text-sm text-muted-foreground">WebSolutions • Hybrid</p>
-              </div>
-              <span className="text-sm font-medium bg-blue-100 text-blue-800 py-1 px-2 rounded">
-                Match
-              </span>
+          ) : jobRecommendations.length > 0 ? (
+            <div className="space-y-4">
+              {jobRecommendations.map((job, index) => (
+                <div 
+                  key={job.id || index} 
+                  className={`flex justify-between items-center ${
+                    index < jobRecommendations.length - 1 ? 'border-b pb-2' : ''
+                  }`}
+                >
+                  <div>
+                    <h3 className="font-medium">{job.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {job.company} • {job.locationType}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-medium 
+                    ${job.status === 'new' ? 'bg-green-100 text-green-800' : 
+                      job.status === 'match' ? 'bg-blue-100 text-blue-800' : 
+                      'bg-orange-100 text-orange-800'} 
+                    py-1 px-2 rounded`}
+                  >
+                    {job.status === 'new' ? 'New' : 
+                     job.status === 'match' ? 'Match' : 'Hot'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-medium">Frontend Engineer</h3>
-                <p className="text-sm text-muted-foreground">DesignHub • On-site</p>
-              </div>
-              <span className="text-sm font-medium bg-orange-100 text-orange-800 py-1 px-2 rounded">
-                Hot
-              </span>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No job recommendations found. Complete your profile to get personalized recommendations.
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Quick Setup Terminal */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
-          <CardDescription>
-            Complete your profile setup to get the most out of JobBoard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Terminal />
+          )}
         </CardContent>
       </Card>
     </div>

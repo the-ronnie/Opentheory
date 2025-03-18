@@ -18,7 +18,8 @@ import {
   User,
   Shield,
   LineChart,
-  Filter 
+  Filter,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,43 +27,12 @@ import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from '@/components/auth/UserProvider';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useGetJobSeekersForConsultantQuery, JobSeeker } from '@/apiSlice/jobSeekersApiSlice';
+import { useGetAllActiveJobsQuery, Job } from '@/apiSlice/jobsApiSlice';
+import { useGetUsersActivitiesQuery } from '@/apiSlice/activitiesApiSlice';
 
-// Sample data for authenticated dashboard
-const jobSeekers = [
-  { id: 1, name: "Alice Johnson", skills: ["React", "TypeScript", "Node.js"] },
-  { id: 2, name: "Bob Smith", skills: ["Python", "Django", "PostgreSQL"] },
-  { id: 3, name: "Carol Williams", skills: ["Java", "Spring Boot", "AWS"] }
-];
-
-const jobs = [
-  {
-    id: 1,
-    title: "Senior React Developer",
-    company: "TechCorp Inc.",
-    location: "Remote",
-    type: "Full-time",
-    skills: ["React", "TypeScript", "Redux"],
-    salary: "$120k - $150k"
-  },
-  {
-    id: 2,
-    title: "Backend Engineer",
-    company: "DataSystems",
-    location: "New York, NY",
-    type: "Full-time",
-    skills: ["Python", "Django", "PostgreSQL"],
-    salary: "$110k - $140k"
-  },
-  {
-    id: 3,
-    title: "DevOps Specialist",
-    company: "CloudTech",
-    location: "Remote",
-    type: "Contract",
-    skills: ["AWS", "Kubernetes", "Terraform"],
-    salary: "$130k - $160k"
-  }
-];
+// Only keeping sample data for unauthenticated view
+// Removed hardcoded data as we'll fetch from API
 
 export default function HomePage() {
   const { user } = useUser();
@@ -382,15 +352,52 @@ function UnauthenticatedView() {
 }
 
 function AuthenticatedView({ username }: { username: string }) {
-  // Calculate stats
-  const totalJobSeekers = jobSeekers.length;
-  const totalJobs = jobs.length;
-  const potentialMatches = jobSeekers.reduce((acc, jobSeeker) => {
-    const matchingJobs = jobs.filter((job) => 
-      job.skills.some((skill) => jobSeeker.skills.includes(skill))
-    );
-    return acc + matchingJobs.length;
-  }, 0);
+  const { user } = useUser();
+  
+  // Fetch job seekers data using the correct API query hook
+  const { 
+    data: jobSeekers = [], 
+    isLoading: isLoadingJobSeekers, 
+    error: jobSeekersError 
+  } = useGetJobSeekersForConsultantQuery({ 
+    consultantId: user?.id?.toString() || '0',
+    queryParams: { limit: 10, offset: 0 }
+  }) || {};
+  
+  // Fetch jobs data using the correct API query hook
+  const { 
+    data: jobs = [], 
+    isLoading: isLoadingJobs, 
+    error: jobsError 
+  } = useGetAllActiveJobsQuery({ limit: 10, offset: 0 }) || {};
+  
+  // Fetch user activities
+  const { 
+    data: activities, 
+    isLoading: isLoadingActivities, 
+    error: activitiesError 
+  } = useGetUsersActivitiesQuery({ userId: user?.id || 0 }) || {};
+
+  // Calculate stats based on API data
+  const totalJobSeekers = jobSeekers?.length || 0;
+  const totalJobs = jobs?.length || 0;
+  
+  // Calculate potential matches (if we have both job seekers and jobs)
+  const potentialMatches = React.useMemo(() => {
+    if (!jobSeekers?.length || !jobs?.length) return 0;
+    
+    return jobSeekers.reduce((acc, jobSeeker) => {
+      const jobSeekerSkills = jobSeeker.skills || [];
+      const matchingJobs = jobs.filter(job => {
+        const jobSkills = job.skills || [];
+        return jobSkills.some(skill => jobSeekerSkills.includes(skill));
+      });
+      return acc + matchingJobs.length;
+    }, 0);
+  }, [jobSeekers, jobs]);
+
+  // Get recent activity count from activities API
+  const recentActivities = activities?.recentActivities?.total || 0;
 
   return (
     <>
@@ -431,8 +438,17 @@ function AuthenticatedView({ username }: { username: string }) {
                 <Users className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">{totalJobSeekers}</div>
-                <p className="text-xs text-gray-500 mt-1">Candidates under your management</p>
+                {isLoadingJobSeekers ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-gray-900">{totalJobSeekers}</div>
+                    <p className="text-xs text-gray-500 mt-1">Candidates under your management</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
@@ -441,8 +457,17 @@ function AuthenticatedView({ username }: { username: string }) {
                 <Briefcase className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">{totalJobs}</div>
-                <p className="text-xs text-gray-500 mt-1">Currently in our database</p>
+                {isLoadingJobs ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-gray-900">{totalJobs}</div>
+                    <p className="text-xs text-gray-500 mt-1">Currently in our database</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
@@ -451,8 +476,17 @@ function AuthenticatedView({ username }: { username: string }) {
                 <CheckCircle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">{potentialMatches}</div>
-                <p className="text-xs text-gray-500 mt-1">Based on skills and requirements</p>
+                {isLoadingJobs || isLoadingJobSeekers ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-gray-900">{potentialMatches}</div>
+                    <p className="text-xs text-gray-500 mt-1">Based on skills and requirements</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
@@ -461,8 +495,17 @@ function AuthenticatedView({ username }: { username: string }) {
                 <Clock className="h-4 w-4 text-purple-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">12</div>
-                <p className="text-xs text-gray-500 mt-1">New activities in the last 24 hours</p>
+                {isLoadingActivities ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-gray-900">{recentActivities}</div>
+                    <p className="text-xs text-gray-500 mt-1">New activities in the last 24 hours</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -483,30 +526,40 @@ function AuthenticatedView({ username }: { username: string }) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {jobSeekers.map((jobSeeker) => (
-                    <div
-                      key={jobSeeker.id}
-                      className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                        {jobSeeker.name.charAt(0)}
+                {isLoadingJobSeekers ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : jobSeekersError ? (
+                  <div className="p-4 text-center text-red-500">Error loading job seekers.</div>
+                ) : jobSeekers.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">No job seekers found.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {jobSeekers.slice(0, 3).map((jobSeeker) => (
+                      <div
+                        key={jobSeeker.id}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                          {jobSeeker.name?.charAt(0) || 'U'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{jobSeeker.name}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {jobSeeker.skills?.slice(0, 3).join(", ") || 'No skills listed'}
+                            {jobSeeker.skills?.length > 3 && "..."}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild className="text-gray-500 hover:text-gray-700">
+                          <Link href={`/job-seekers/${jobSeeker.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{jobSeeker.name}</p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {jobSeeker.skills.slice(0, 3).join(", ")}
-                          {jobSeeker.skills.length > 3 && "..."}
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" asChild className="text-gray-500 hover:text-gray-700">
-                        <Link href={`/dashboard?id=${jobSeeker.id}`}>
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button variant="outline" className="w-full" asChild>
@@ -527,39 +580,60 @@ function AuthenticatedView({ username }: { username: string }) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <div key={job.id} className="p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors duration-150">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{job.title}</h3>
-                          <p className="text-sm text-gray-500">
-                            {job.company} • {job.location}
+                {isLoadingJobs ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : jobsError ? (
+                  <div className="p-4 text-center text-red-500">Error loading jobs.</div>
+                ) : jobs.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">No jobs found.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {jobs.slice(0, 3).map((job) => (
+                      <div key={job.id} className="p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors duration-150">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{job.title}</h3>
+                            <p className="text-sm text-gray-500">
+                              {job.company} • {job.location}
+                            </p>
+                          </div>
+                          <div className="text-xs font-medium text-black bg-gray-100 px-2 py-1 rounded-full">
+                            {job.type || 'Full-time'}
+                          </div>
+                        </div>
+                        {job.skills && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {job.skills.slice(0, 4).map((skill) => (
+                              <span 
+                                key={skill} 
+                                className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                            {job.skills.length > 4 && (
+                              <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                +{job.skills.length - 4} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div className="mt-3 flex justify-between items-center">
+                          <p className="text-sm font-medium text-gray-900">
+                            {job.salary ? `$${job.salary.toLocaleString()}` : 'Salary not specified'}
                           </p>
+                          <Button size="sm" className="bg-black hover:bg-gray-900 text-white" asChild>
+                            <Link href={`/jobs/${job.id}`}>
+                              View Details
+                            </Link>
+                          </Button>
                         </div>
-                        <div className="text-xs font-medium text-black bg-gray-100 px-2 py-1 rounded-full">
-                          {job.type}
-                        </div>
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {job.skills.map((skill) => (
-                          <span 
-                            key={skill} 
-                            className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex justify-between items-center">
-                        <p className="text-sm font-medium text-gray-900">{job.salary}</p>
-                        <Button size="sm" className="bg-black hover:bg-gray-900 text-white">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button variant="outline" className="w-full" asChild>
@@ -616,6 +690,4 @@ function AuthenticatedView({ username }: { username: string }) {
       </section>
     </>
   );
-
-  
 }
