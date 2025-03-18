@@ -23,12 +23,13 @@ export async function getUser(req: Request) {
 }
 
 export async function getUserById(id: number) {
+  console.log("is it coming her e2");
   const result = await db
     .select()
     .from(users)
     .where(and(eq(users.id, id), isNull(users.deletedAt)))
     .limit(1);
-  
+  console.log(result);
   return result.length > 0 ? result[0] : null;
 }
 
@@ -58,6 +59,7 @@ export async function getAllConsultants(limit = 50, offset = 0) {
 
 // Get consultant by ID - for backwards compatibility
 export async function getConsultantById(id: number) {
+  console.log("is it coming here ");
   return await getUserById(id);
 }
 

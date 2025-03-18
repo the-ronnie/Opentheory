@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
+import {useUser} from '../../components/auth/UserProvider';
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Download, FileText, Plus, Search, Trash2, User } from "lucide-react"
 import {
@@ -19,16 +20,23 @@ import {
 import { Badge } from "../../components/ui/badge"
 import { useGetJobSeekersForConsultantQuery, useDeleteJobSeekerMutation } from "../../apiSlice/jobSeekersApiSlice"
 import { useParams } from "next/navigation"
+
 // import { toast } from "../../components/ui/use-toast"
 import React from "react"
 export default function JobSeekersPage() {
+    const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedJobSeeker, setSelectedJobSeeker] = useState<string | null>(null)
-  
+  console.log(user);
   // Get consultantId from the URL or from user context
   // This is a placeholder - you'll need to adapt this based on your auth/routing setup
-  const params = useParams()
-  const consultantId = Array.isArray(params.consultantId) ? params.consultantId[0] : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9"
+  const params = useParams();
+  const consultantId = user?.id
+    ? String(user.id) // Ensure it's a string
+    : (Array.isArray(params.consultantId) 
+        ? params.consultantId[0] 
+        : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9");
+  
   console.log(consultantId);
   
   // Fetch job seekers for the current consultant
