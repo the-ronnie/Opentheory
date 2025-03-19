@@ -397,7 +397,7 @@ function AuthenticatedView({ username }: { username: string }) {
   }, [jobSeekers, jobs]);
 
   // Get recent activity count from activities API
-  const recentActivities = activities?.recentActivities?.total || 0;
+  const recentActivities = activities?.length || 0;
 
   return (
     <>

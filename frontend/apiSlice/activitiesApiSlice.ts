@@ -30,10 +30,19 @@ export const activitiesApiSlice = baseApiSlice.injectEndpoints({
       providesTags: ['Activity'],
     }),
     
-    // Add the getUserActivities query
-    getUsersActivities: builder.query<UserActivitiesResponse, UserActivitiesParams>({
+    // Updated getUsersActivities to match getRecentActivities output format
+    getUsersActivities: builder.query<ActivityLog[], UserActivitiesParams>({
       query: ({ userId, limit = 20, offset = 0 }) => 
         `/activities/user/${userId}?limit=${limit}&offset=${offset}`,
+      // Transform the response to match the ActivityLog[] format
+      transformResponse: (response: UserActivitiesResponse) => {
+        // If the response has the expected structure, return activities
+        if (response.recentActivities && Array.isArray(response.recentActivities.activities)) {
+          return response.recentActivities.activities;
+        } 
+        // Otherwise return an empty array
+        return [];
+      },
       providesTags: (result, error, { userId }) => [
         { type: 'Activity', id: `user-${userId}` }
       ],

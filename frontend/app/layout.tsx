@@ -1,5 +1,5 @@
 import { Inter } from 'next/font/google';
-import { ThemeProvider } from '../providers/ThemeProvider';
+
 import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'JobBoard - Find your next opportunity',
+  title: 'OpenTheory - Find your next opportunity',
   description: 'Connect with employers and find your perfect job',
 };
 
