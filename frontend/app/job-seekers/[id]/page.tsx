@@ -171,12 +171,12 @@ export default function JobSeekerProfilePage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="flex-1 h-full min-h-[500px] w-full overflow-hidden">
-                    <iframe 
-                      src={`${resumePath}#view=FitH`}
-                      className="w-full h-full border-0"
-                      style={{ minHeight: "500px" }}
-                      title={`${jobSeeker.name}'s Resume`}
-                    />
+                   <iframe 
+  src={`${resumePath}#view=FitH`}
+  className="w-full h-full border-0"
+  style={{ minHeight: "80vh" }}
+  title={`${jobSeeker.name}'s Resume`}
+/>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsResumeOpen(false)}>
