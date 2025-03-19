@@ -19,7 +19,11 @@ import {
   Shield,
   LineChart,
   Filter,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  CircleDot
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -53,6 +57,52 @@ export default function HomePage() {
 }
 
 function UnauthenticatedView() {
+  // Image slideshow state
+  const [currentImage, setCurrentImage] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([false, false, false]);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Use the correct paths for public images
+  // If images are in the public folder, use a path starting with /
+  // If images are in the src/images folder, they need to be imported
+  const images = [
+    '/images/image.png',  // Update paths according to actual location
+    '/images/image1.png',
+    '/images/image2.png'
+  ];
+  
+  // Handle image load success
+  const handleImageLoad = (index: number) => {
+    setImagesLoaded(prev => {
+      const newState = [...prev];
+      newState[index] = true;
+      return newState;
+    });
+  };
+
+  // Handle image load error
+  const handleImageError = (index: number) => {
+    console.error(`Failed to load image at index ${index}`);
+    // Keep the image in the rotation but mark it as failed
+    handleImageLoad(index);
+  };
+  
+  // Auto-rotate slideshow only when not hovered
+  useEffect(() => {
+    if (isHovered) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 5000); // Change image every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [isHovered, images.length]);
+  
+  // Handle manual navigation
+  const goToNext = () => setCurrentImage((prev) => (prev + 1) % images.length);
+  const goToPrev = () => setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  const goToSlide = (index: number) => setCurrentImage(index);
+  
   return (
     <>
       {/* Hero Section */}
@@ -86,16 +136,109 @@ function UnauthenticatedView() {
                 </Button>
               </div>
             </div>
-            <div className="mx-auto lg:mx-0 relative aspect-video rounded-xl overflow-hidden shadow-lg border border-gray-200">
-              <Image
-                src="/placeholder.svg?height=720&width=1280"
-                alt="Dashboard Preview"
-                width={1280}
-                height={720}
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-gray-900/0"></div>
+            <div 
+              className="mx-auto lg:mx-0 relative aspect-video rounded-xl overflow-hidden shadow-lg border border-gray-200 
+                         transition-all duration-300 ease-in-out transform group
+                         hover:shadow-2xl hover:scale-[1.02] hover:border-gray-300"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {/* Image container with slides */}
+              <div className="relative w-full h-full bg-gray-50">
+                {images.map((img, index) => (
+                  <div 
+                    key={index} 
+                    className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                      currentImage === index 
+                        ? 'opacity-100 scale-100' 
+                        : 'opacity-0 scale-[1.02]'
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`Dashboard Preview ${index + 1}`}
+                      width={1280}
+                      height={720}
+                      className="object-cover w-full h-full"
+                      priority={index === 0}
+                      onLoad={() => handleImageLoad(index)}
+                      onError={() => handleImageError(index)}
+                    />
+                    
+                    {/* Fallback if image fails to load */}
+                    {!imagesLoaded[index] && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="text-center p-4">
+                          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm text-gray-500">Loading preview...</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Image counter badge */}
+                <div className="absolute top-4 right-4 z-20 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+                  {currentImage + 1} / {images.length}
+                </div>
+                
+                {/* Navigation controls - improved styling */}
+                <div className={`absolute inset-0 flex items-center justify-between p-4 z-10 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full bg-black/30 hover:bg-black/60 text-white h-10 w-10 shadow-lg backdrop-blur-sm 
+                              transition-transform duration-200 hover:scale-110"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      goToPrev();
+                    }}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                    <span className="sr-only">Previous</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full bg-black/30 hover:bg-black/60 text-white h-10 w-10 shadow-lg backdrop-blur-sm
+                              transition-transform duration-200 hover:scale-110"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      goToNext();
+                    }}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                    <span className="sr-only">Next</span>
+                  </Button>
+                </div>
+                
+                {/* Improved slide indicators */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                  {images.map((_, index) => (
+                    <button 
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        currentImage === index 
+                          ? 'bg-white w-6' 
+                          : 'bg-white/50 hover:bg-white/80'
+                      }`}
+                      onClick={() => goToSlide(index)}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Enhanced overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 z-[1] pointer-events-none"></div>
+              
+              {/* Caption for current image */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 z-[2] transform transition-transform duration-300 ease-in-out">
+                <div className="bg-black/30 backdrop-blur-sm text-white p-3 rounded-lg">
+                  <h3 className="text-lg font-medium">Professional Dashboard</h3>
+                  <p className="text-sm text-gray-200">Powerful tools to connect job seekers with opportunities</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -268,52 +411,91 @@ function UnauthenticatedView() {
           </div>
 
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
-                  <p className="text-gray-600 italic">
-                    "This platform has revolutionized how I manage my job seekers. The matching algorithm is incredibly
-                    accurate, and I've seen a 40% increase in successful placements."
-                  </p>
+                  <div className="relative">
+                    <div className="absolute -top-2 -left-2 text-gray-200">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 italic pl-6">
+                      "This platform has revolutionized how I manage my job seekers. The matching algorithm is incredibly
+                      accurate, and I've seen a 40% increase in successful placements."
+                    </p>
+                  </div>
                   <div className="flex items-center space-x-4">
-                    <div className="rounded-full bg-gray-100 w-10 h-10"></div>
+                    <div className="rounded-full bg-gradient-to-br from-blue-400 to-purple-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">SJ</div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Sarah Johnson</p>
                       <p className="text-sm text-gray-500">Senior Recruitment Consultant</p>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-gray-200">
-              <CardContent className="p-6">
-                <div className="flex flex-col space-y-4">
-                  <p className="text-gray-600 italic">
-                    "The analytics dashboard gives me insights I never had before. I can now make data-driven decisions
-                    about which jobs to pursue for my candidates."
-                  </p>
-                  <div className="flex items-center space-x-4">
-                    <div className="rounded-full bg-gray-100 w-10 h-10"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Michael Chen</p>
-                      <p className="text-sm text-gray-500">Tech Recruitment Specialist</p>
+                    <div className="ml-auto flex">
+                      {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
-                  <p className="text-gray-600 italic">
-                    "The resume management system is a game-changer. I can easily organize, update, and track all my
-                    candidates in one place."
-                  </p>
+                  <div className="relative">
+                    <div className="absolute -top-2 -left-2 text-gray-200">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 italic pl-6">
+                      "The analytics dashboard gives me insights I never had before. I can now make data-driven decisions
+                      about which jobs to pursue for my candidates."
+                    </p>
+                  </div>
                   <div className="flex items-center space-x-4">
-                    <div className="rounded-full bg-gray-100 w-10 h-10"></div>
+                    <div className="rounded-full bg-gradient-to-br from-green-400 to-teal-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">MC</div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Michael Chen</p>
+                      <p className="text-sm text-gray-500">Tech Recruitment Specialist</p>
+                    </div>
+                    <div className="ml-auto flex">
+                      {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div className="relative">
+                    <div className="absolute -top-2 -left-2 text-gray-200">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 italic pl-6">
+                      "The resume management system is a game-changer. I can easily organize, update, and track all my
+                      candidates in one place."
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="rounded-full bg-gradient-to-br from-orange-400 to-pink-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">PP</div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">Priya Patel</p>
                       <p className="text-sm text-gray-500">Independent Recruiter</p>
+                    </div>
+                    <div className="ml-auto flex">
+                      {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -324,25 +506,45 @@ function UnauthenticatedView() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-black text-white">
-        <div className="container px-4 md:px-6 mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+      <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-black via-gray-900 to-black text-white relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-blue-500 to-transparent"></div>
+          <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-purple-500 to-transparent"></div>
+        </div>
+        <div className="container px-4 md:px-6 mx-auto relative z-10">
+          <div className="flex flex-col items-center justify-center space-y-6 text-center max-w-3xl mx-auto">
+            <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white mb-2">
+              Join Over 5,000+ Consultants Today
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
                 Ready to Transform Your Recruitment Process?
               </h2>
-              <p className="max-w-[600px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[800px] text-gray-300 md:text-xl/relaxed lg:text-xl/relaxed xl:text-xl/relaxed">
                 Join thousands of consultants who are matching talent with opportunity more efficiently than ever
-                before.
+                before. Start your free trial today.
               </p>
             </div>
-            <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button asChild size="lg" className="bg-white text-black hover:bg-gray-200">
-                <Link href="/sign-up">Get Started Now</Link>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full max-w-md">
+              <Button asChild size="lg" className="bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/10">
+                <Link href="/sign-up" className="w-full sm:w-auto px-8 py-6 text-lg">Get Started Now</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="bg-white text-black hover:bg-gray-200">
-                <Link href="/support">Contact Sales</Link>
+              <Button variant="outline" size="lg" asChild className="bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/10">
+                <Link href="/support" className="w-full sm:w-auto px-8 py-6 text-lg">Contact Sales</Link>
               </Button>
+            </div>
+            <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-black bg-gradient-to-br ${
+                    i === 1 ? 'from-blue-400 to-blue-600' : 
+                    i === 2 ? 'from-green-400 to-green-600' : 
+                    i === 3 ? 'from-yellow-400 to-yellow-600' : 
+                    'from-pink-400 to-pink-600'
+                  }`}></div>
+                ))}
+              </div>
+              <span className="text-sm text-gray-300">Trusted by consultants worldwide</span>
             </div>
           </div>
         </div>
@@ -416,7 +618,7 @@ function AuthenticatedView({ username }: { username: string }) {
                   Go to Dashboard
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="border-gray-400 text-white hover:bg-gray-700">
+              <Button asChild variant="outline" className="bg-white text-black hover:bg-gray-200">
                 <Link href="/support">
                   <Search className="mr-2 h-4 w-4" />
                   Get Support
@@ -659,7 +861,7 @@ function AuthenticatedView({ username }: { username: string }) {
                 asChild
                 className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
               >
-                <Link href="/dashboard">
+                <Link href="/job-seekers/add">
                   <Upload className="mr-2 h-4 w-4" />
                   Add Job Seeker
                 </Link>
