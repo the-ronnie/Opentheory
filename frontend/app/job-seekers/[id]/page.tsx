@@ -34,11 +34,12 @@ export default function JobSeekerProfilePage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
-    console.log(id);
-    console.log("is it coming hereb again");
+  console.log(id);
+  console.log("is it coming hereb again");
   const [jobSeeker, setJobSeeker] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [isResumeOpen, setIsResumeOpen] = useState(false)
 
   useEffect(() => {
     async function fetchJobSeeker() {
@@ -66,6 +67,9 @@ export default function JobSeekerProfilePage() {
       day: "numeric",
     }).format(date)
   }
+
+  // Resume file path based on job seeker ID
+  const resumePath = `/resumes/haha.pdf`
 
   if (loading) {
     return <p className="text-center mt-10">Loading...</p>
@@ -150,6 +154,43 @@ export default function JobSeekerProfilePage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Added on {formatDate(jobSeeker.addedDate)}</span>
               </div>
+              
+              {/* View Resume Button with Dialog */}
+              <Dialog open={isResumeOpen} onOpenChange={setIsResumeOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full" variant="outline">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Resume
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[800px] h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle>{jobSeeker.name}'s Resume</DialogTitle>
+                    <DialogDescription>
+                      Resume uploaded on {formatDate(jobSeeker.addedDate)}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex-1 h-full min-h-[500px] w-full overflow-hidden">
+                    <iframe 
+                      src={`${resumePath}#view=FitH`}
+                      className="w-full h-full border-0"
+                      style={{ minHeight: "500px" }}
+                      title={`${jobSeeker.name}'s Resume`}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsResumeOpen(false)}>
+                      Close
+                    </Button>
+                    <Button asChild>
+                      <a href={resumePath} download={`${jobSeeker.name}-Resume.pdf`}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </a>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
