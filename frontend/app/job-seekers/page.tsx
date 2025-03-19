@@ -208,7 +208,7 @@ export default function JobSeekersPage() {
                           </Link>
                         </Button>
                         <Button variant="outline" size="sm" className="h-8" asChild>
-                          <Link href={`/search-jobs?jobSeekerId=${jobSeeker.id}`}>
+                          <Link href={`/jobs?jobSeekerId=${jobSeeker.id}&jobSeekerName=${jobSeeker.name}`}>
                             <Search className="mr-2 h-4 w-4" />
                             Find Jobs
                           </Link>
