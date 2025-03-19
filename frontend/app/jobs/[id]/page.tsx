@@ -6,9 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/navbar';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
-  // Unwrap the params Promise with React.use()
-  const resolvedParams = React.use(params);
-  const { id } = resolvedParams;
+  // Get the id directly from params
+  const { id } = params;
   const router = useRouter();
   
   const { data: job, isLoading, isError, error } = useGetJobByIdQuery(id);

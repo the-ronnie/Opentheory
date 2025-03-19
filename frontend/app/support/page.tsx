@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import Link from 'next/link';
 import { Mail, Phone, MessageSquare, HelpCircle, FileText, ArrowRight, ChevronDown, Search, Clock } from 'lucide-react';
 import Navbar from "../../components/navbar";
+import ChatBot from "../../components/chat-bot";
 
 export default function SupportPage() {
   // Add state for dropdowns and form
@@ -15,6 +16,7 @@ export default function SupportPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // Updated FAQ data for consultant job platform
   const faqData = [
@@ -252,7 +254,10 @@ export default function SupportPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">Average response time: 2 minutes</p>
                 <p className="text-muted-foreground">Enterprise plan feature</p>
-                <Button className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white">
+                <Button 
+                  className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => setChatbotOpen(true)}
+                >
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Start Chat
                 </Button>
@@ -546,6 +551,9 @@ export default function SupportPage() {
           </div>
         </div>
       </section>
+
+      {/* Chatbot Component */}
+      <ChatBot isOpen={chatbotOpen} onClose={() => setChatbotOpen(false)} />
     </div>
   )
 }

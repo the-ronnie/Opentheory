@@ -36,7 +36,7 @@ export default function JobsPage() {
     isError: isJobSeekersError,
     error: jobSeekersError
   } = useGetJobSeekersForConsultantQuery(
-    { consultantId: consultantId || '' }, 
+    { consultantId: consultantId ? String(consultantId) : '' }, 
     { skip: !consultantId }
   );
   
@@ -122,7 +122,7 @@ export default function JobsPage() {
   // Get the paginated subset for display
   const getPaginatedJobs = () => {
     if (!filteredJobs && !jobs) return [];
-    const jobsToPage = filteredJobs || jobs;
+    const jobsToPage = filteredJobs || jobs || [];
     return jobsToPage.slice(page * pageSize, (page + 1) * pageSize);
   };
 
