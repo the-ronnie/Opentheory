@@ -1,6 +1,6 @@
 // frontend/apiSlice/jobSeekersApiSlice.ts
-import { baseApiSlice } from './baseApiSlice';
-import { ActivityLog, QueryParams } from './consultantsApiSlice';
+import { baseApiSlice, QueryParams  } from './baseApiSlice';
+import { ActivityLog} from './userApiSlice';
 
 export type JobSeeker = {
   id: string;

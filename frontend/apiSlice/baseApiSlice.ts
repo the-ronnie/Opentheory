@@ -14,3 +14,9 @@ export const baseApiSlice = createApi({
   tagTypes: ['User', 'Consultant', 'JobSeeker', 'Job', 'Activity'],
   endpoints: () => ({}),
 });
+
+// Add this type definition
+export type QueryParams = {
+  limit?: number;
+  offset?: number;
+};

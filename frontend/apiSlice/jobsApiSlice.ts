@@ -1,6 +1,6 @@
 // frontend/apiSlice/jobsApiSlice.ts
-import { baseApiSlice } from './baseApiSlice';
-import { ActivityLog, QueryParams } from './consultantsApiSlice';
+import { baseApiSlice, QueryParams } from './baseApiSlice';
+import { ActivityLog } from './userApiSlice';
 
 export type Job = {
   id: string;
