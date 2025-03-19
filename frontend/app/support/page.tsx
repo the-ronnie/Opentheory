@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import Link from 'next/link';
 import { Mail, Phone, MessageSquare, HelpCircle, FileText, ArrowRight, ChevronDown, Search, Clock } from 'lucide-react';
-import Navbar from "@/components/navbar";
+import Navbar from "../../components/navbar";
 
 export default function SupportPage() {
   // Add state for dropdowns and form
