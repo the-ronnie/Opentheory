@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import React from "react"
+import Navbar from "@/components/navbar"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -77,7 +78,8 @@ export default function JobSeekerProfilePage() {
 
   if (error || !jobSeeker) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex-1 space-y-4 p-4 md:p-2 pt-6">
+        <Navbar />
         <div className="flex items-center">
           <Button variant="ghost" size="sm" className="mr-2" asChild>
             <Link href="/job-seekers">
