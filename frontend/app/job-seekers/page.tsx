@@ -6,6 +6,7 @@ import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import {useUser} from '../../components/auth/UserProvider';
+import Navbar from "@/components/navbar"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Download, FileText, Plus, Search, Trash2, User } from "lucide-react"
 import {
@@ -38,7 +39,7 @@ export default function JobSeekersPage() {
         : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9");
   
   console.log(consultantId);
-  
+  const resumePath = `/resumes/haha.pdf`
   // Fetch job seekers for the current consultant
   const { 
     data: jobSeekersData, 
@@ -78,7 +79,8 @@ export default function JobSeekersPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 p-4 md:p-2 pt-3">
+      <Navbar />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Job Seekers</h2>
         <Button asChild>
@@ -201,7 +203,7 @@ export default function JobSeekersPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <Button variant="outline" size="sm" className="h-8" asChild>
-                          <Link href={jobSeeker.resume} target="_blank">
+                          <Link href={resumePath} target="_blank" download>
                             <FileText className="mr-2 h-4 w-4" />
                             <Download className="h-3 w-3" />
                             Resume
