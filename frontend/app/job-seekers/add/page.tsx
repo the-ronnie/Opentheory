@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
+import Navbar from "@/components/navbar"
 import { Alert, AlertDescription, AlertTitle } from "../../../components/ui/alert";
 import { useCreateJobSeekerMutation } from "../../../apiSlice/jobSeekersApiSlice";
 import { useUser } from '../../../components/auth/UserProvider';
@@ -116,7 +117,8 @@ export default function AddJobseekerPage() {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 p-4 md:p-2 pt-6">
+      <Navbar />
       <h2 className="text-3xl font-bold">Add Jobseeker</h2>
       <Card>
         <CardHeader>
