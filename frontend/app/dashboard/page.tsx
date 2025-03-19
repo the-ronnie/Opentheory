@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useGetUserActivitiesQuery } from '../../apiSlice/userApiSlice';
 import { useGetAllActiveJobsQuery } from '../../apiSlice/jobsApiSlice';
 import { useGetRecentActivitiesQuery } from '../../apiSlice/activitiesApiSlice';
+import { useGetJobSeekersForConsultantQuery } from '../../apiSlice/jobSeekersApiSlice';
 import { Badge } from '../../components/ui/badge';
 import { Navbar } from '../../components/navbar';
 
@@ -39,6 +40,12 @@ export default function DashboardPage() {
     
   const { data: recentActivities, isLoading: isLoadingRecentActivities } = 
     useGetRecentActivitiesQuery({ limit: 10 });
+
+  const { data: jobSeekers, isLoading: isLoadingJobSeekers } = 
+    useGetJobSeekersForConsultantQuery({
+      consultantId: user?.id?.toString() || '0',
+      queryParams: { limit: 5 }
+    });
   
   // Get the current time of day for the greeting
   const hour = new Date().getHours();
@@ -46,25 +53,93 @@ export default function DashboardPage() {
   if (hour >= 12 && hour < 18) greeting = "Good afternoon";
   else if (hour >= 18) greeting = "Good evening";
 
-  // Extract stats from API data or provide defaults
-  const stats = {
-    activeApplications: userActivities?.applications?.active || 0,
-    newApplications: userActivities?.applications?.new || 0,
-    rejected: userActivities?.applications?.rejected || 0,
-    accepted: userActivities?.applications?.accepted || 0,
+  // Extract initial stats from API data
+  const initialStats = {
+    activeJobSeekers: jobSeekers?.length || 0,
+    newJobSeekers: 0, // This would come from an API with "recent" filter
+    placedJobSeekers: 0, // This would be tracked in the JobSeeker status
+    availableJobs: recentJobs?.length || 0,
     savedJobs: userActivities?.savedJobs?.total || 0,
     newSavedJobs: userActivities?.savedJobs?.new || 0,
-    connections: userActivities?.connections?.total || 0,
-    newConnections: userActivities?.connections?.new || 0,
     notifications: userActivities?.notifications?.total || 0,
     unreadNotifications: userActivities?.notifications?.unread || 0,
   };
 
-  // Get job recommendations from API data
-  const jobRecommendations = userActivities?.recommendations || [];
-
   // Loading state for the entire dashboard
-  const isLoading = isLoadingActivities || isLoadingJobs || isLoadingRecentActivities;
+  const isLoading = isLoadingActivities || isLoadingJobs || isLoadingRecentActivities || isLoadingJobSeekers;
+
+  // Calculate match percentage between job seeker skills and job requirements
+  const calculateMatchPercentage = (jobSeekerSkills: string[], jobSkills: string[]) => {
+    if (jobSkills.length === 0) return 0;
+    
+    const matchingSkills = jobSeekerSkills.filter(skill => 
+      jobSkills.some(jobSkill => jobSkill.toLowerCase() === skill.toLowerCase())
+    );
+    
+    return Math.round((matchingSkills.length / jobSkills.length) * 100);
+  };
+  
+  // Function to get matching job seekers for a job
+  const getMatchingJobSeekers = (job: any, jobSeekers: any[]) => {
+    if (!jobSeekers || jobSeekers.length === 0) return [];
+    
+    return jobSeekers
+      .map(seeker => ({
+        ...seeker,
+        matchPercentage: calculateMatchPercentage(seeker.skills, job.skills)
+      }))
+      .filter(seeker => seeker.matchPercentage > 0)
+      .sort((a, b) => b.matchPercentage - a.matchPercentage);
+  };
+
+  // Calculate the number of jobs that match at least one job seeker's skills
+  const countMatchingJobs = () => {
+    if (!recentJobs || !jobSeekers || jobSeekers.length === 0 || recentJobs.length === 0) {
+      return 0;
+    }
+    
+    // Count jobs that match at least one job seeker with at least 20% skill match
+    const matchingJobsCount = recentJobs.filter(job => {
+      return jobSeekers.some(seeker => {
+        const matchPercentage = calculateMatchPercentage(seeker.skills, job.skills);
+        return matchPercentage >= 20; // Consider it a match if at least 20% skills match
+      });
+    }).length;
+    
+    return matchingJobsCount;
+  };
+  
+  // Calculate the number of potential matches (job-seeker pairs)
+  const countPotentialMatches = () => {
+    if (!recentJobs || !jobSeekers || jobSeekers.length === 0 || recentJobs.length === 0) {
+      return 0;
+    }
+    
+    // Count all job-seeker pairs that have at least 20% skill match
+    let potentialMatchesCount = 0;
+    
+    recentJobs.forEach(job => {
+      jobSeekers.forEach(seeker => {
+        const matchPercentage = calculateMatchPercentage(seeker.skills, job.skills);
+        if (matchPercentage >= 20) {
+          potentialMatchesCount++;
+        }
+      });
+    });
+    
+    return potentialMatchesCount;
+  };
+  
+  // Get the job matching stats
+  const matchingJobsCount = countMatchingJobs();
+  const potentialMatchesCount = countPotentialMatches();
+
+  // Merge initial stats with matching stats
+  const stats = {
+    ...initialStats,
+    matchingJobs: matchingJobsCount,
+    potentialMatches: potentialMatchesCount,
+  };
 
   if (isLoading) {
     return (
@@ -82,31 +157,45 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <div className="container mx-auto px-4 py-6 space-y-8">
-        {/* Welcome Header */}
+        {/* Welcome Header with Notification Summary */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               {greeting}, {user?.name || 'there'}!
             </h1>
             <p className="text-muted-foreground">
-              Welcome to your OpenTheory dashboard. Here's your career snapshot.
+              <span className="font-medium">Activity Summary:</span> {stats.unreadNotifications} unread notifications, 
+              {stats.activeJobSeekers > 0 ? ` managing ${stats.activeJobSeekers} job seekers, ` : ' '}
+              {stats.availableJobs > 0 ? `${stats.availableJobs} active jobs available` : 'No active jobs available'}
             </p>
           </div>
           
           <Card className="w-full md:w-[300px]">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+                {stats.unreadNotifications > 0 && (
+                  <Badge variant="destructive" className="ml-2">{stats.unreadNotifications}</Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-2">
-                <Link href="/jobs">
+                <Link href="/job-seekers/add">
                   <Button variant="outline" size="sm" className="w-full justify-between">
-                    Browse Jobs <ArrowRightIcon className="h-3 w-3" />
+                    Add New Job Seeker <ArrowRightIcon className="h-3 w-3" />
                   </Button>
                 </Link>
-                <Link href="/applications">
+                <Link href="/jobs/search">
                   <Button variant="outline" size="sm" className="w-full justify-between">
-                    View Applications <ArrowRightIcon className="h-3 w-3" />
+                    Search Jobs <ArrowRightIcon className="h-3 w-3" />
+                  </Button>
+                </Link>
+                <Link href="/activities">
+                  <Button variant="outline" size="sm" className="w-full justify-between">
+                    View Activities {stats.unreadNotifications > 0 && (
+                      <Badge variant="destructive" className="ml-1">{stats.unreadNotifications}</Badge>
+                    )}
                   </Button>
                 </Link>
               </div>
@@ -115,34 +204,50 @@ export default function DashboardPage() {
         </div>
 
         {/* Section Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6 border-b pb-2">
           <Button 
             variant={activeSection === 'overview' ? "default" : "outline"} 
             onClick={() => setActiveSection('overview')}
             className="rounded-md"
           >
+            <HomeIcon className="h-4 w-4 mr-2" />
             Overview
           </Button>
           <Button 
-            variant={activeSection === 'applications' ? "default" : "outline"} 
-            onClick={() => setActiveSection('applications')}
+            variant={activeSection === 'job-seekers' ? "default" : "outline"} 
+            onClick={() => setActiveSection('job-seekers')}
             className="rounded-md"
           >
-            Applications
+            <UsersIcon className="h-4 w-4 mr-2" />
+            Job Seekers
           </Button>
           <Button 
-            variant={activeSection === 'jobs' ? "default" : "outline"} 
-            onClick={() => setActiveSection('jobs')}
+            variant={activeSection === 'job-matching' ? "default" : "outline"} 
+            onClick={() => setActiveSection('job-matching')}
             className="rounded-md"
           >
-            Jobs
+            <BriefcaseIcon className="h-4 w-4 mr-2" />
+            Job Matching
           </Button>
           <Button 
-            variant={activeSection === 'activity' ? "default" : "outline"} 
-            onClick={() => setActiveSection('activity')}
+            variant={activeSection === 'activities' ? "default" : "outline"} 
+            onClick={() => setActiveSection('activities')}
+            className="rounded-md relative"
+          >
+            <BellIcon className="h-4 w-4 mr-2" />
+            Activities
+            {stats.unreadNotifications > 0 && (
+              <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                {stats.unreadNotifications > 9 ? '9+' : stats.unreadNotifications}
+              </span>
+            )}
+          </Button>
+          <Button 
+            variant={activeSection === 'settings' ? "default" : "outline"} 
+            onClick={() => setActiveSection('settings')}
             className="rounded-md"
           >
-            Activity
+            Settings
           </Button>
         </div>
         
@@ -155,12 +260,22 @@ export default function DashboardPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Applications</CardTitle>
+                    <CardTitle className="text-sm font-medium">Job Seekers</CardTitle>
+                    <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.activeJobSeekers}</div>
+                    <p className="text-xs text-muted-foreground">{stats.newJobSeekers} new this week</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Available Jobs</CardTitle>
                     <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.activeApplications}</div>
-                    <p className="text-xs text-muted-foreground">{stats.newApplications} new this week</p>
+                    <div className="text-2xl font-bold">{stats.availableJobs}</div>
+                    <p className="text-xs text-muted-foreground">Jobs that match your seekers</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -170,22 +285,12 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{stats.savedJobs}</div>
-                    <p className="text-xs text-muted-foreground">{stats.newSavedJobs} new since yesterday</p>
+                    <p className="text-xs text-muted-foreground">{stats.newSavedJobs} new potential matches</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Network</CardTitle>
-                    <UsersIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.connections}</div>
-                    <p className="text-xs text-muted-foreground">+{stats.newConnections} from last week</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                    <CardTitle className="text-sm font-medium">Activities</CardTitle>
                     <BellIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -195,75 +300,71 @@ export default function DashboardPage() {
                 </Card>
               </div>
               
-              {/* Application Status Card */}
+              {/* Job Seeker Status Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Application Status</CardTitle>
-                  <CardDescription>Overview of your job applications</CardDescription>
+                  <CardTitle className="text-lg">Job Seeker Status</CardTitle>
+                  <CardDescription>Overview of your job seekers</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <ClockIcon className="h-5 w-5 text-amber-500 mr-2" />
-                        <span>In Progress</span>
+                        <span>Actively Looking</span>
                       </div>
-                      <Badge variant="outline">{stats.activeApplications}</Badge>
+                      <Badge variant="outline">{stats.activeJobSeekers}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
-                        <span>Accepted</span>
+                        <span>Placed</span>
                       </div>
-                      <Badge variant="outline">{stats.accepted}</Badge>
+                      <Badge variant="outline">{stats.placedJobSeekers}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <XCircleIcon className="h-5 w-5 text-red-500 mr-2" />
-                        <span>Rejected</span>
+                        <TrendingUpIcon className="h-5 w-5 text-blue-500 mr-2" />
+                        <span>Potential Matches</span>
                       </div>
-                      <Badge variant="outline">{stats.rejected}</Badge>
+                      <Badge variant="outline">{stats.availableJobs}</Badge>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Link href="/applications">
+                  <Link href="/job-seekers">
                     <Button variant="outline" size="sm">
-                      View All Applications
+                      Manage Job Seekers
                     </Button>
                   </Link>
                 </CardFooter>
               </Card>
               
-              {/* Job Recommendations */}
+              {/* Your Job Seekers */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Job Recommendations</CardTitle>
-                  <CardDescription>Based on your profile and preferences</CardDescription>
+                  <CardTitle className="text-lg">Your Job Seekers</CardTitle>
+                  <CardDescription>Job seekers you are currently managing</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {jobRecommendations && jobRecommendations.length > 0 ? (
+                  {jobSeekers && jobSeekers.length > 0 ? (
                     <div className="space-y-4">
-                      {jobRecommendations.map((job, index) => (
+                      {jobSeekers.map((seeker) => (
                         <div 
-                          key={job.id || index} 
-                          className={`${index < jobRecommendations.length - 1 ? 'border-b pb-3' : ''}`}
+                          key={seeker.id} 
+                          className="border-b pb-3 last:border-0"
                         >
-                          <Link href={`/jobs/${job.id || index}`} className="block hover:bg-gray-50 rounded p-2 transition-colors">
+                          <Link href={`/job-seekers/${seeker.id}`} className="block hover:bg-gray-50 rounded p-2 transition-colors">
                             <div className="flex justify-between items-center">
                               <div>
-                                <h3 className="font-medium">{job.title}</h3>
+                                <h3 className="font-medium">{seeker.name}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  {job.company} • {job.locationType}
+                                  {seeker.skills.join(', ')}
+                                  {seeker.location ? ` • ${seeker.location}` : ''}
                                 </p>
                               </div>
-                              <Badge
-                                className={job.status === 'new' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 
-                                  job.status === 'match' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 
-                                  'bg-orange-100 text-orange-800 hover:bg-orange-200'}
-                              >
-                                {job.status === 'new' ? 'New' : 
-                                 job.status === 'match' ? 'Match' : 'Hot'}
+                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                Active
                               </Badge>
                             </div>
                           </Link>
@@ -272,238 +373,226 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                      No job recommendations found. We're working on finding matches for your skills.
+                      No job seekers found. Start adding job seekers to manage them.
                     </div>
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Link href="/jobs">
-                    <Button variant="outline">
-                      Browse All Jobs <ArrowRightIcon className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <div className="flex space-x-2 w-full justify-between">
+                    <Link href="/job-seekers">
+                      <Button variant="outline">
+                        View All Job Seekers
+                      </Button>
+                    </Link>
+                    <Link href="/job-seekers/add">
+                      <Button>
+                        Add New Job Seeker
+                      </Button>
+                    </Link>
+                  </div>
                 </CardFooter>
               </Card>
             </div>
           )}
           
-          {/* Applications Section */}
-          {activeSection === 'applications' && (
-            <Card className="col-span-3">
+          {/* Job Seekers Section */}
+          {activeSection === 'job-seekers' && (
+            <Card>
               <CardHeader>
-                <CardTitle>Your Applications</CardTitle>
-                <CardDescription>Track your job applications progress</CardDescription>
+                <CardTitle>Job Seeker Management</CardTitle>
+                <CardDescription>Manage and track your job seekers</CardDescription>
               </CardHeader>
               <CardContent>
-                {stats.activeApplications > 0 ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h3 className="font-medium text-blue-700 mb-1">In Progress</h3>
-                        <p className="text-2xl font-bold">{stats.activeApplications}</p>
-                        <p className="text-sm text-blue-600 mt-1">Applications being reviewed</p>
-                      </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <h3 className="font-medium text-green-700 mb-1">Accepted</h3>
-                        <p className="text-2xl font-bold">{stats.accepted}</p>
-                        <p className="text-sm text-green-600 mt-1">Applications accepted</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Application Activity</h3>
-                      <div className="flex items-center">
-                        <div className="flex-1 bg-gray-100 h-2 rounded-full mr-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: '45%' }} 
-                          />
-                        </div>
-                        <span className="text-sm font-medium">45%</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Response rate from employers
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <BriefcaseIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-xl font-medium text-gray-700 mb-2">No applications yet</h3>
-                    <p className="text-gray-500 mb-6">Start applying to find your dream job</p>
-                    <Link href="/jobs">
-                      <Button>Browse Jobs</Button>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-blue-700 mb-1">Active Job Seekers</h3>
+                    <p className="text-2xl font-bold">{stats.activeJobSeekers}</p>
+                    <p className="text-sm text-blue-600 mt-1">Job seekers actively looking</p>
+                    <Link href="/job-seekers" className="mt-3 inline-block">
+                      <Button size="sm" variant="outline">View All Job Seekers</Button>
                     </Link>
                   </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Link href="/applications">
-                  <Button variant="outline">View Application Details</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          )}
-          
-          {/* Jobs Section */}
-          {activeSection === 'jobs' && (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Job Listings</CardTitle>
-                  <CardDescription>Latest opportunities that may interest you</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {recentJobs && recentJobs.length > 0 ? (
-                    <div className="space-y-4">
-                      {recentJobs.map((job) => (
-                        <Link 
-                          href={`/jobs/${job.id}`} 
-                          key={job.id}
-                          className="block border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-green-700 mb-1">Matching Jobs</h3>
+                    <p className="text-2xl font-bold">{stats.matchingJobs}</p>
+                    <p className="text-sm text-green-600 mt-1">Jobs that match your seekers' skills</p>
+                    <Link href="/jobs" className="mt-3 inline-block">
+                      <Button size="sm" variant="outline">View All Jobs</Button>
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium mb-3">Job Seeker List</h3>
+                  {jobSeekers && jobSeekers.length > 0 ? (
+                    <div className="space-y-3">
+                      {jobSeekers.map((seeker) => (
+                        <Link key={seeker.id} href={`/job-seekers/${seeker.id}`} className="block border p-3 rounded hover:bg-gray-50">
+                          <div className="flex justify-between">
                             <div>
-                              <h3 className="font-medium">{job.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {job.company} • {job.location}
-                              </p>
-                              <div className="flex gap-2 mt-1">
-                                {job.skills.slice(0, 3).map((skill, i) => (
-                                  <Badge key={i} variant="outline" className="bg-blue-50">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                                {job.skills.length > 3 && (
-                                  <Badge variant="outline" className="bg-blue-50">
-                                    +{job.skills.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge variant="secondary">{job.type}</Badge>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Posted: {new Date(job.postedDate).toLocaleDateString()}
+                              <h4 className="font-medium">{seeker.name}</h4>
+                              <p className="text-xs text-muted-foreground">
+                                {seeker.experience} years exp • {seeker.skills.slice(0, 3).join(', ')}
+                                {seeker.skills.length > 3 ? '...' : ''}
                               </p>
                             </div>
+                            <Badge variant="outline">{seeker.location}</Badge>
                           </div>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No recent job listings available.
+                    <div className="text-center py-6 text-muted-foreground">
+                      No job seekers available
                     </div>
                   )}
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {recentJobs?.length || 0} of many jobs
-                  </div>
-                  <Link href="/jobs">
-                    <Button>View All Jobs</Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Saved Jobs</CardTitle>
-                    <CardDescription>Jobs you've bookmarked for later</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {stats.savedJobs > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-lg font-semibold">
-                          You have {stats.savedJobs} saved jobs
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {stats.newSavedJobs} new jobs were added since your last visit
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <BookmarkIcon className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                        <p className="text-muted-foreground">
-                          You haven't saved any jobs yet
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/jobs/saved">
-                      <Button variant="outline" size="sm">
-                        View Saved Jobs
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Skills in Demand</CardTitle>
-                    <CardDescription>Popular skills in recent job postings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span>React</span>
-                        <div className="flex items-center">
-                          <div className="w-[100px] bg-gray-200 h-2 rounded-full mr-2">
-                            <div className="bg-primary h-2 rounded-full" style={{ width: '85%' }} />
-                          </div>
-                          <span className="text-xs font-medium">85%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>TypeScript</span>
-                        <div className="flex items-center">
-                          <div className="w-[100px] bg-gray-200 h-2 rounded-full mr-2">
-                            <div className="bg-primary h-2 rounded-full" style={{ width: '78%' }} />
-                          </div>
-                          <span className="text-xs font-medium">78%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Node.js</span>
-                        <div className="flex items-center">
-                          <div className="w-[100px] bg-gray-200 h-2 rounded-full mr-2">
-                            <div className="bg-primary h-2 rounded-full" style={{ width: '65%' }} />
-                          </div>
-                          <span className="text-xs font-medium">65%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Next.js</span>
-                        <div className="flex items-center">
-                          <div className="w-[100px] bg-gray-200 h-2 rounded-full mr-2">
-                            <div className="bg-primary h-2 rounded-full" style={{ width: '52%' }} />
-                          </div>
-                          <span className="text-xs font-medium">52%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/skills">
-                      <Button variant="outline" size="sm">
-                        View Skill Insights
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </div>
-            </>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Link href="/job-seekers/add">
+                  <Button variant="outline">Add Job Seeker</Button>
+                </Link>
+                <Link href="/job-seekers">
+                  <Button>View All Job Seekers</Button>
+                </Link>
+              </CardFooter>
+            </Card>
           )}
           
-          {/* Activity Section */}
-          {activeSection === 'activity' && (
+          {/* Job Matching Section */}
+          {activeSection === 'job-matching' && (
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your latest actions and notifications</CardDescription>
+                <CardTitle>Job Matching</CardTitle>
+                <CardDescription>Match your job seekers with available jobs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-blue-700 mb-1">Job Seekers</h3>
+                    <p className="text-2xl font-bold">{stats.activeJobSeekers}</p>
+                    <p className="text-sm text-blue-600 mt-1">To be matched with jobs</p>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-green-700 mb-1">Available Jobs</h3>
+                    <p className="text-2xl font-bold">{stats.availableJobs}</p>
+                    <p className="text-sm text-green-600 mt-1">{stats.matchingJobs} have potential matches</p>
+                  </div>
+                  
+                  <div className="bg-amber-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-amber-700 mb-1">Potential Matches</h3>
+                    <p className="text-2xl font-bold">{stats.potentialMatches}</p>
+                    <p className="text-sm text-amber-600 mt-1">Job-seeker pairs with skill matches</p>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium mb-3">Recent Job Listings</h3>
+                  
+                  {recentJobs && recentJobs.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentJobs.map((job) => {
+                        // Get job seekers that match this job's skills
+                        const matchingJobSeekers = getMatchingJobSeekers(job, jobSeekers || []);
+                        
+                        return (
+                          <div key={job.id} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">{job.title}</h4>
+                                <p className="text-sm text-muted-foreground">{job.company} • {job.location}</p>
+                                
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {job.skills.slice(0, 3).map((skill, i) => (
+                                    <Badge key={i} variant="outline" className="bg-blue-50 text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                  {job.skills.length > 3 && (
+                                    <Badge variant="outline" className="bg-blue-50 text-xs">
+                                      +{job.skills.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-col items-end space-y-2">
+                                <Badge>{job.type}</Badge>
+                                <Link href={`/jobs/${job.id}/match`}>
+                                  <Button size="sm">Match Job Seekers</Button>
+                                </Link>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4 pt-2 border-t">
+                              <p className="text-sm font-medium">
+                                Potential Matches: {matchingJobSeekers.length > 0 ? 
+                                  `${matchingJobSeekers.length} candidate${matchingJobSeekers.length === 1 ? '' : 's'}` : 
+                                  'No matches found'}
+                              </p>
+                              {matchingJobSeekers.length > 0 ? (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {matchingJobSeekers.slice(0, 3).map((seeker) => (
+                                    <Link key={seeker.id} href={`/job-seekers/${seeker.id}`}>
+                                      <Badge 
+                                        variant="secondary" 
+                                        className={`cursor-pointer hover:bg-gray-200 flex items-center gap-1 ${
+                                          seeker.matchPercentage >= 80 ? 'bg-green-100' : 
+                                          seeker.matchPercentage >= 50 ? 'bg-yellow-100' : 'bg-gray-100'
+                                        }`}
+                                      >
+                                        {seeker.name}
+                                        <span className={`text-xs px-1 rounded-full ${
+                                          seeker.matchPercentage >= 80 ? 'bg-green-200 text-green-800' : 
+                                          seeker.matchPercentage >= 50 ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-200 text-gray-800'
+                                        }`}>
+                                          {seeker.matchPercentage}%
+                                        </span>
+                                      </Badge>
+                                    </Link>
+                                  ))}
+                                  {matchingJobSeekers.length > 3 && (
+                                    <Badge variant="secondary">+{matchingJobSeekers.length - 3} more</Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  No job seekers match the required skills
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No jobs available for matching
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Link href="/jobs">
+                  <Button>View All Available Jobs</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          )}
+          
+          {/* Activities Section */}
+          {activeSection === 'activities' && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Activity Log</CardTitle>
+                  <CardDescription>Recent activities and changes</CardDescription>
+                </div>
+                {stats.unreadNotifications > 0 && (
+                  <Badge>{stats.unreadNotifications} unread</Badge>
+                )}
               </CardHeader>
               <CardContent>
                 {recentActivities && recentActivities.length > 0 ? (
@@ -513,8 +602,8 @@ export default function DashboardPage() {
                         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
                           {activity.entityType === 'job' ? (
                             <BriefcaseIcon className="h-4 w-4 text-blue-600" />
-                          ) : activity.entityType === 'application' ? (
-                            <ClockIcon className="h-4 w-4 text-amber-600" />
+                          ) : activity.entityType === 'jobseeker' ? (
+                            <UsersIcon className="h-4 w-4 text-green-600" />
                           ) : (
                             <BellIcon className="h-4 w-4 text-purple-600" />
                           )}
@@ -525,9 +614,23 @@ export default function DashboardPage() {
                             <p className="text-xs text-muted-foreground">
                               {new Date(activity.timestamp).toLocaleDateString()} at {new Date(activity.timestamp).toLocaleTimeString()}
                             </p>
-                            <Badge variant="outline" className="text-xs">
-                              {activity.entityType}
-                            </Badge>
+                            {activity.entityType === 'job' ? (
+                              <Link href={`/jobs/${activity.entityId}`}>
+                                <Badge variant="outline" className="text-xs hover:bg-blue-50 cursor-pointer">
+                                  View Job
+                                </Badge>
+                              </Link>
+                            ) : activity.entityType === 'jobseeker' ? (
+                              <Link href={`/job-seekers/${activity.entityId}`}>
+                                <Badge variant="outline" className="text-xs hover:bg-green-50 cursor-pointer">
+                                  View Job Seeker
+                                </Badge>
+                              </Link>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                {activity.entityType}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -535,14 +638,64 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    No recent activities found
+                    <p>No recent activities found</p>
+                    <p className="text-sm mt-2">Activities will appear here as you manage job seekers and jobs</p>
                   </div>
                 )}
               </CardContent>
-              <CardFooter>
-                <Link href="/activities">
-                  <Button variant="outline">View All Activity</Button>
+              <CardFooter className="flex justify-between">
+                <Link href="/job-seekers">
+                  <Button variant="outline">Manage Job Seekers</Button>
                 </Link>
+                <Link href="/jobs">
+                  <Button>Browse Available Jobs</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          )}
+          
+          {/* Settings Section */}
+          {activeSection === 'settings' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>Manage your account preferences</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Profile Settings</h3>
+                    <div className="space-y-2">
+                      <Link href="/profile" className="block p-3 border rounded hover:bg-gray-50">
+                        <div className="flex justify-between items-center">
+                          <span>Edit Profile</span>
+                          <ArrowRightIcon className="h-4 w-4" />
+                        </div>
+                      </Link>
+                      <div className="block p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                        <div className="flex justify-between items-center">
+                          <span>Notification Preferences</span>
+                          <ArrowRightIcon className="h-4 w-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Account Security</h3>
+                    <div className="space-y-2">
+                      <Link href="/profile" className="block p-3 border rounded hover:bg-gray-50">
+                        <div className="flex justify-between items-center">
+                          <span>Change Password</span>
+                          <ArrowRightIcon className="h-4 w-4" />
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="text-red-500 hover:text-red-700">Log Out</Button>
               </CardFooter>
             </Card>
           )}

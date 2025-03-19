@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 import { 
   ArrowRight, 
   Briefcase, 
@@ -23,13 +23,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Navbar } from "@/components/navbar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser } from '@/components/auth/UserProvider';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { useGetJobSeekersForConsultantQuery, JobSeeker } from '@/apiSlice/jobSeekersApiSlice';
-import { useGetAllActiveJobsQuery, Job } from '@/apiSlice/jobsApiSlice';
-import { useGetUsersActivitiesQuery } from '@/apiSlice/activitiesApiSlice';
+import { Navbar } from "../components/navbar";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
+import { useUser } from '../components/auth/UserProvider';
+import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import { useGetJobSeekersForConsultantQuery, JobSeeker } from '../apiSlice/jobSeekersApiSlice';
+import { useGetAllActiveJobsQuery, Job } from '../apiSlice/jobsApiSlice';
+import { useGetUsersActivitiesQuery } from '../apiSlice/activitiesApiSlice';
 
 // Only keeping sample data for unauthenticated view
 // Removed hardcoded data as we'll fetch from API
