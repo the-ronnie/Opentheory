@@ -17,19 +17,19 @@ export async function getUser(req: Request) {
     const user = await getUserById(userId);
     return user;
   } catch (error) {
-    console.error('Error getting user from session:', error);
+    //.error('Error getting user from session:', error);
     return null;
   }
 }
 
 export async function getUserById(id: number) {
-  console.log("is it coming her e2");
+  ////.log("is it coming her e2");
   const result = await db
     .select()
     .from(users)
     .where(and(eq(users.id, id), isNull(users.deletedAt)))
     .limit(1);
-  console.log(result);
+  ////.log(result);
   return result.length > 0 ? result[0] : null;
 }
 
@@ -59,7 +59,7 @@ export async function getAllConsultants(limit = 50, offset = 0) {
 
 // Get consultant by ID - for backwards compatibility
 export async function getConsultantById(id: number) {
-  console.log("is it coming here ");
+  //console.log("is it coming here ");
   return await getUserById(id);
 }
 

@@ -5,22 +5,39 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Loader2 } from 'lucide-react';
-import { useLoginMutation, useRegisterMutation } from '../../apiSlice/userApiSlice';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { useLoginMutation } from '../../apiSlice/userApiSlice';
 import { useUser } from '../../components/auth/UserProvider';
+import EmailVerification from '../../components/auth/EmailVerification';
+import { 
+  useSendWelcomeEmailMutation,
+  useSendVerificationOtpMutation,
+  useVerifyOtpMutation
+} from '../../apiSlice/emailAuthApiSlice';
+import { useRegisterMutation } from '../../apiSlice/userApiSlice';
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   const router = useRouter();
   
-  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
-  const [register, { isLoading: isRegisterLoading }] = useRegisterMutation();
+  const [login] = useLoginMutation();
+  const [register] = useRegisterMutation();
+  const [sendWelcomeEmail] = useSendWelcomeEmailMutation(); 
   const { setUser } = useUser();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordMatchError, setPasswordMatchError] = useState<string | null>(null);
+  
+  // Email verification states
+  const [showVerification, setShowVerification] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
+  const [registrationData, setRegistrationData] = useState<{
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
   
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,9 +51,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     
     try {
       if (mode === 'signin') {
+        // Login flow - no email verification needed
         const userData = await login({ email, password }).unwrap();
         setUser(userData);
+        router.push(redirect);
       } else {
+        // Signup flow - start email verification
         const name = formData.get('name') as string;
         const confirmPassword = formData.get('confirmPassword') as string;
         
@@ -46,18 +66,101 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           return;
         }
         
-        const userData = await register({ name, email, password }).unwrap();
-        setUser(userData);
+        // Store registration data for later
+        setRegistrationData({ name, email, password });
+        setEmailToVerify(email);
+        setShowVerification(true);
       }
-      
-      // Redirect after successful authentication
-      router.push(redirect);
-      
     } catch (err: any) {
       setError(err.data?.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Handle successful email verification
+  const handleVerificationSuccess = async () => {
+    if (!registrationData) return;
+    
+    try {
+      setIsSubmitting(true);
+      const userData = await register(registrationData).unwrap();
+      setUser(userData);
+      
+      // Send welcome email
+      await sendWelcomeEmail({ 
+        email: registrationData.email,
+        name: registrationData.name
+      }).unwrap();
+      
+      // Redirect after successful registration
+      router.push(redirect);
+    } catch (err: any) {
+      setError(err.data?.message || 'Failed to create account. Please try again.');
+      setShowVerification(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Cancel verification process
+  const handleCancelVerification = () => {
+    setShowVerification(false);
+  };
+
+  if (showVerification) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white text-gray-900">
+        {/* Header */}
+        <header className="border-b border-gray-100 py-5 px-6 flex justify-between items-center shadow-sm">
+          <div className="flex items-center">
+            <div className="bg-black w-10 h-10 flex items-center justify-center rounded-full">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-white"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
+              </svg>
+            </div>
+            <span className="ml-3 text-xl font-semibold tracking-tight">
+            <Link href="/" className="hover:text-black transition-colors">
+              OpenTheory
+            </Link>
+            </span>
+          </div>
+        </header>
+
+        {/* Main Content - Verification Form */}
+        <main className="flex-1 flex flex-col items-center justify-center px-6 bg-gray-50">
+          <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100">
+            <EmailVerification
+              email={emailToVerify}
+              onVerified={handleVerificationSuccess}
+              onCancel={handleCancelVerification}
+            />
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="py-6 px-6 border-t border-gray-100 bg-white">
+          <div className="flex flex-wrap justify-center gap-x-8 text-sm text-gray-500">
+            <Link href="#" className="hover:text-black transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="#" className="hover:text-black transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/support" className="hover:text-black transition-colors">
+              Contact
+            </Link>
+          </div>
+        </footer>
+      </div>
+    );
   }
 
   return (
@@ -191,11 +294,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Please wait...
                 </>
               ) : (
-                mode === 'signin' ? 'Sign in' : 'Create account'
+                mode === 'signin' ? 'Sign in' : 'Continue'
               )}
             </Button>
           </form>

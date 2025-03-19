@@ -35,8 +35,8 @@ export default function JobSeekerProfilePage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
-  console.log(id);
-  console.log("is it coming hereb again");
+  //console.log(id);
+  //console.log("is it coming hereb again");
   const [jobSeeker, setJobSeeker] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)

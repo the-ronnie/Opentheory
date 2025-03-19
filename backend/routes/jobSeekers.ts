@@ -71,7 +71,7 @@ router.get('/consultant/:consultantId', async (req: Request, res: Response) => {
   try {
    
     const consultantId = Number(req.params.consultantId);
-    console.log(consultantId); // Convert string to number
+    //console.log(consultantId); // Convert string to number
     const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
     
@@ -80,7 +80,7 @@ router.get('/consultant/:consultantId', async (req: Request, res: Response) => {
     if (!consultant) {
       return res.status(404).json({ error: 'Consultant not found' });
     }
-    console.log(consultant);
+    //console.log(consultant);
     const jobSeekers = await getJobSeekersForConsultant(consultantId, limit, offset);
     return res.status(200).json(jobSeekers);
   } catch (error) {

@@ -3,11 +3,58 @@ import { z } from 'zod';
 import { User } from '../db/schema';
 import { getSession } from './session';
 import { getUserById } from '../db/queries';
+import jwt from 'jsonwebtoken';
 
 export type ActionState = {
   error?: string;
   success?: string;
   [key: string]: any; // This allows for additional properties
+};
+
+// This middleware will check for auth but not require it
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return next();
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as { id: number };
+    
+    if (decoded && decoded.id) {
+      const user = await getUserById(decoded.id);
+      if (user) {
+        req.user = user;
+      }
+    }
+    
+    next();
+  } catch (error) {
+    // We don't respond with an error for optional auth
+    next();
+  }
+};
+
+// This middleware will require authentication
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  next();
+};
+
+// This middleware will require admin role
+export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin privileges required' });
+  }
+  
+  next();
 };
 
 // Express middleware to verify authentication
@@ -61,35 +108,6 @@ export function hasRole(roles: string | string[]) {
     
     next();
   };
-}
-
-// Middleware for optional authentication
-export async function optionalAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    // Get session from cookies
-    const session = await getSession(req);
-    
-    // No session or expired, continue without user
-    if (!session || !session.user || !session.user.id || new Date(session.expires) < new Date()) {
-      return next();
-    }
-    
-    // Get user from database
-    const user = await getUserById(session.user.id);
-    if (user) {
-      // Attach user to request object if found
-      req.user = user;
-    }
-    
-    next();
-  } catch (error) {
-    // Just continue without user on error
-    next();
-  }
 }
 
 type ValidatedActionFunction<S extends z.ZodType<any, any>, T> = (

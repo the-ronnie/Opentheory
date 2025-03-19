@@ -28,7 +28,7 @@ export default function JobSeekersPage() {
     const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedJobSeeker, setSelectedJobSeeker] = useState<string | null>(null)
-  console.log(user);
+  //console.log(user);
   // Get consultantId from the URL or from user context
   // This is a placeholder - you'll need to adapt this based on your auth/routing setup
   const params = useParams();
@@ -38,7 +38,7 @@ export default function JobSeekersPage() {
         ? params.consultantId[0] 
         : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9");
   
-  console.log(consultantId);
+  //console.log(consultantId);
   const resumePath = `/resumes/haha.pdf`
   // Fetch job seekers for the current consultant
   const { 

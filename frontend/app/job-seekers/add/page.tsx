@@ -105,7 +105,7 @@ export default function AddJobseekerPage() {
         // The resume is already set in the form data
       };
       
-      console.log("Formatted data:", formattedData);
+      //console.log("Formatted data:", formattedData);
       await createJobSeeker(formattedData).unwrap();
       setIsSuccess(true);
       reset();
