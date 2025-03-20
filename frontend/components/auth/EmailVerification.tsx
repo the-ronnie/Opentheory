@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Loader2, Check, AlertCircle } from 'lucide-react';
@@ -25,6 +25,10 @@ export default function EmailVerification({
   const [error, setError] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   
+  // Use a ref to track if component is mounted and prevent multiple sends
+  const mounted = useRef(false);
+  const otpRequestSent = useRef(false);
+  
   // API hooks
   const [sendOtp, { isLoading: isSendingOtp }] = useSendVerificationOtpMutation();
   const [verifyOtp, { isLoading: isVerifyingOtp }] = useVerifyOtpMutation();
@@ -37,13 +41,22 @@ export default function EmailVerification({
     }
   }, [timeLeft]);
   
-  // Send OTP when component mounts, but only if autoSendOtp is true
+  // Send OTP when component mounts - but only once
   useEffect(() => {
-    if (autoSendOtp) {
-      console.log("EmailVerification mounted, sending OTP to:", email);
+    // Set mounted flag
+    mounted.current = true;
+    
+    // Only send OTP if not already sent
+    if (autoSendOtp && !otpRequestSent.current) {
       sendOtpToEmail();
+      otpRequestSent.current = true;
     }
-  }, []); // Only run on mount
+    
+    // Cleanup on unmount
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   
   // Format time as mm:ss
   const formatTime = (seconds: number) => {
@@ -54,51 +67,57 @@ export default function EmailVerification({
   
   // Send OTP to email
   const sendOtpToEmail = async () => {
+    if (isSendingOtp) return; // Prevent multiple simultaneous requests
+    
     try {
       setError(null);
-      console.log("Sending OTP to email:", email);
-      const response = await sendOtp({ email }).unwrap();
-      console.log("OTP sent successfully:", response);
-      setTimeLeft(60); // Reset timer to 60 seconds
+      await sendOtp({ email }).unwrap();
+      
+      // Only update state if component is still mounted
+      if (mounted.current) {
+        setTimeLeft(60); // Reset timer to 60 seconds
+      }
     } catch (err: any) {
-      console.error("Error sending OTP:", err);
-      setError(err.data?.message || 'Failed to send verification code');
+      // Only update state if component is still mounted
+      if (mounted.current) {
+        setError(err.data?.message || 'Failed to send verification code');
+      }
     }
   };
-    
+  
   // Verify OTP
   const handleVerifyOtp = async () => {
-    if (!otp || otp.length !== 6) {
+    if (!otp || otp.length !== 6 || isVerifyingOtp) {
       setError('Please enter a valid 6-digit code');
       return;
     }
     
     try {
       setError(null);
-      console.log("Verifying OTP:", otp, "for email:", email);
       const response = await verifyOtp({ email, otp }).unwrap();
-      console.log("OTP verification response:", response);
+      
+      // Only proceed if still mounted
+      if (!mounted.current) return;
       
       if (response.success) {
-        console.log("OTP verified successfully");
         setIsVerified(true);
-        // Small delay to show the success state before calling the callback
-        setTimeout(() => {
-          console.log("Calling onVerified callback");
-          onVerified();
-        }, 1000);
+        // No need for setTimeout, just call the callback directly
+        onVerified();
       } else {
-        console.log("OTP verification failed");
         setError('Invalid verification code');
       }
     } catch (err: any) {
-      console.error("OTP verification error:", err);
-      setError(err.data?.message || 'Invalid verification code');
+      // Only update state if component is still mounted
+      if (mounted.current) {
+        setError(err.data?.message || 'Invalid verification code');
+      }
     }
   };
 
+  // Handle input keypress
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && otp.length === 6) {
+    if (e.key === 'Enter' && otp.length === 6 && !isVerifyingOtp && !isVerified) {
+      e.preventDefault(); // Prevent form submission
       handleVerifyOtp();
     }
   };
@@ -125,9 +144,10 @@ export default function EmailVerification({
             placeholder="Enter 6-digit code"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             className="text-center text-lg py-5 letter-spacing-1"
             disabled={isVerified}
+            autoFocus
           />
         </div>
         
@@ -155,14 +175,18 @@ export default function EmailVerification({
                 Verified
               </>
             ) : (
-              "Verify & Continue"
+              "Verify Email"
             )}
           </Button>
           
           <div className="flex justify-between text-sm mt-2">
             <button
               type="button"
-              onClick={() => sendOtpToEmail()}
+              onClick={() => {
+                if (timeLeft <= 0 && !isSendingOtp && !isVerified) {
+                  sendOtpToEmail();
+                }
+              }}
               disabled={timeLeft > 0 || isSendingOtp || isVerified}
               className="text-blue-600 hover:text-blue-800 font-medium disabled:text-gray-400"
             >

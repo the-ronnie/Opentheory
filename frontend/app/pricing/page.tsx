@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Navbar from "../../components/navbar";
 import { Button } from "../../components/ui/button";
 import { Check, HelpCircle } from "lucide-react";
 import Link from "next/link";
@@ -68,36 +67,56 @@ export default function PricingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      {/* Simple Header with Logo */}
+      <header className="w-full py-4 border-b bg-background">
+        <div className="container px-4 md:px-6">
+          <Link href="/" className="flex items-center font-bold text-xl">
+            <div className="bg-black w-8 h-8 flex items-center justify-center rounded-full">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-white"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
+              </svg>
+            </div>
+            <span className="ml-2 text-lg font-semibold tracking-tight">OpenTheory</span>
+          </Link>
+        </div>
+      </header>
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted">
-          <div className="container px-4 md:px-6 space-y-10 text-center">
+        <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted">
+          <div className="container px-4 md:px-6 space-y-12 text-center max-w-5xl mx-auto">
             <div className="space-y-4">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
                 Simple, Transparent Pricing
               </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+              <p className="mx-auto max-w-[700px] text-muted-foreground text-lg md:text-xl">
                 One plan, all features included. Everything you need to succeed.
               </p>
             </div>
 
             {/* Single Pricing Card - Center Aligned */}
             <div className="flex justify-center">
-              <div className="w-full max-w-md rounded-lg border-2 border-primary p-8 shadow-lg bg-card">
+              <div className="w-full max-w-md rounded-xl border-2 border-primary p-8 shadow-xl bg-card">
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold">{pricingPlan.name}</h3>
                   <p className="text-muted-foreground">{pricingPlan.description}</p>
                   
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold">${pricingPlan.price}</span>
+                  <div className="flex items-baseline justify-center mt-6">
+                    <span className="text-6xl font-bold">${pricingPlan.price}</span>
                     <span className="ml-1 text-muted-foreground">/month</span>
                   </div>
                   
                   <Button
                     variant="default"
-                    className="w-full text-lg py-6"
+                    size="lg"
+                    className="w-full text-lg py-6 mt-4"
                     onClick={handleSubscribe}
                   >
                     {pricingPlan.buttonText}
@@ -125,9 +144,9 @@ export default function PricingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="w-full py-12 md:py-24 bg-muted">
-          <div className="container px-4 md:px-6">
-            <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+        <section className="w-full py-16 md:py-24 bg-muted">
+          <div className="container px-4 md:px-6 max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
             
             <div className="grid gap-6 md:gap-8 max-w-3xl mx-auto">
               {faqItems.map((faq, index) => (
@@ -135,7 +154,7 @@ export default function PricingPage() {
                   <div className="flex items-start">
                     <HelpCircle className="h-6 w-6 text-primary mr-3 mt-1 shrink-0" />
                     <div>
-                      <h3 className="font-medium mb-2">{faq.question}</h3>
+                      <h3 className="font-medium text-lg mb-2">{faq.question}</h3>
                       <p className="text-muted-foreground">{faq.answer}</p>
                     </div>
                   </div>
@@ -143,9 +162,9 @@ export default function PricingPage() {
               ))}
             </div>
             
-            <div className="text-center mt-12">
+            <div className="text-center mt-16">
               <p className="text-muted-foreground mb-4">Still have questions?</p>
-              <Button asChild>
+              <Button asChild size="lg">
                 <Link href="/support">Contact Our Support Team</Link>
               </Button>
             </div>
@@ -153,13 +172,14 @@ export default function PricingPage() {
         </section>
 
         {/* Call to Action */}
-        <section className="w-full py-12 md:py-16 bg-primary text-primary-foreground">
-          <div className="container px-4 md:px-6 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to transform your consulting business?</h2>
-            <p className="mx-auto max-w-[700px] mb-8">Join thousands of successful consultants who have streamlined their job placement process.</p>
+        <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
+          <div className="container px-4 md:px-6 text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform your consulting business?</h2>
+            <p className="mx-auto max-w-[700px] mb-10 text-lg opacity-90">Join thousands of successful consultants who have streamlined their job placement process.</p>
             <Button 
               variant="outline" 
-              className="bg-white hover:bg-white/90 text-primary hover:text-primary text-lg py-6 px-8" 
+              size="lg"
+              className="bg-white hover:bg-white/90 text-primary hover:text-primary text-lg py-6 px-10" 
               onClick={handleSubscribe}
             >
               Get Started Today
@@ -168,12 +188,12 @@ export default function PricingPage() {
         </section>
       </main>
       
-      <footer className="w-full py-6 bg-background border-t">
-        <div className="container px-4 md:px-6 flex flex-col md:flex-row justify-between items-center">
+      <footer className="w-full py-8 bg-background border-t">
+        <div className="container px-4 md:px-6 flex flex-col md:flex-row justify-between items-center max-w-5xl mx-auto">
           <p className="text-sm text-muted-foreground">
             © 2023 OpenTheory. All rights reserved.
           </p>
-          <div className="flex gap-4 mt-4 md:mt-0">
+          <div className="flex gap-6 mt-4 md:mt-0">
             <Link href="/terms" className="text-sm text-muted-foreground hover:underline">
               Terms
             </Link>

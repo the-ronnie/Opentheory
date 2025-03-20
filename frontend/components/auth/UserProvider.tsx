@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useGetCurrentUserQuery, User } from '../../apiSlice/userApiSlice';
 
 // Define context type
@@ -9,31 +9,56 @@ interface UserContextType {
   setUser: (user: User | null) => void;
   clearUser: () => void;
   isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   
   const { data: apiUser, isLoading: isApiLoading } = useGetCurrentUserQuery();
 
+  // Enhanced setUser function with synchronous updates to prevent race conditions
+  const setUser = useCallback((newUser: User | null) => {
+    console.log("Setting user in UserProvider:", newUser?.email);
+    setUserState(newUser);
+    setIsLoading(false);
+  }, []);
+
+  // Clear user and reset loading state
+  const clearUser = useCallback(() => {
+    console.log("Clearing user in UserProvider");
+    setUserState(null);
+    setIsLoading(false);
+  }, []);
+
+  // Initial load of user data from API
   useEffect(() => {
-    if (!isApiLoading) {
+    // Only update if this is the first load or if API loading has completed
+    if (isFirstLoad && !isApiLoading) {
       if (apiUser) {
-        setUser(apiUser);
+        console.log("Initial user load from API:", apiUser.email);
+        setUserState(apiUser);
       }
       setIsLoading(false);
+      setIsFirstLoad(false);
     }
-  }, [apiUser, isApiLoading]);
+  }, [apiUser, isApiLoading, isFirstLoad]);
 
-  const clearUser = () => {
-    setUser(null);
-  };
+  // Check if authenticated
+  const isAuthenticated = user !== null;
 
   return (
-    <UserContext.Provider value={{ user, setUser, clearUser, isLoading: isLoading || isApiLoading }}>
+    <UserContext.Provider value={{ 
+      user, 
+      setUser, 
+      clearUser, 
+      isLoading: isLoading || isApiLoading,
+      isAuthenticated
+    }}>
       {children}
     </UserContext.Provider>
   );

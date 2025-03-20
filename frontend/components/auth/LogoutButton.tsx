@@ -7,11 +7,14 @@ import { useUser } from "./UserProvider";
 import React from "react";
 import { Loader2 } from "lucide-react";
 
-interface LogoutButtonProps extends ButtonProps {}
+interface LogoutButtonProps extends ButtonProps {
+  redirectTo?: string;
+}
 
 export function LogoutButton({ 
   children, 
   className,
+  redirectTo = '/sign-in', // Default to sign-in page
   ...props 
 }: LogoutButtonProps) {
   const router = useRouter();
@@ -22,7 +25,9 @@ export function LogoutButton({
     try {
       await logout().unwrap();
       clearUser();
-      router.push("/sign-in");
+      
+      // After logout, redirect to the specified path
+      router.push(redirectTo);
     } catch (error) {
       console.error("Logout failed:", error);
     }

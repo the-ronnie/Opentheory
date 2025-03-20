@@ -1,8 +1,8 @@
 'use client';
 
 import { useUser } from './UserProvider';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { useGetCurrentUserQuery } from '../../apiSlice/userApiSlice';
@@ -20,6 +20,8 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const redirected = useRef(false);
   
   // Use the query to get the current user - will automatically refresh on mount
   const { data: apiUser, isLoading: isApiLoading, error: apiError } = useGetCurrentUserQuery();
@@ -30,18 +32,20 @@ export function ProtectedRoute({
       setUser(apiUser);
     }
     
+    // Skip if still loading or already redirected
+    if (isLoading || isApiLoading || redirected.current) return;
+    
     // Handle unauthenticated users
-    if (!isLoading && !isApiLoading) {
-      // If user is not authenticated and this route requires authentication
-      if (!allowUnauthenticated && (apiError || !user)) {
-        // Redirect to sign-in page with redirect back to current page
-        router.push(`/sign-in?redirect=${encodeURIComponent(window.location.pathname)}`);
-      } else if (user && requiredRole && user.role !== requiredRole) {
-        // If a specific role is required and user doesn't have it
-        router.push('/dashboard');
-      }
+    if (!allowUnauthenticated && (apiError || !user)) {
+      redirected.current = true;
+      // Redirect to sign-in page with redirect back to current page
+      router.push(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
+    } else if (user && requiredRole && user.role !== requiredRole) {
+      redirected.current = true;
+      // If a specific role is required and user doesn't have it, redirect to pricing
+      router.push('/pricing');
     }
-  }, [isLoading, isApiLoading, user, apiUser, apiError, router, requiredRole, setUser, allowUnauthenticated]);
+  }, [isLoading, isApiLoading, user, apiUser, apiError, router, requiredRole, setUser, allowUnauthenticated, pathname]);
 
   // While loading, show spinner
   if (isLoading || isApiLoading) {
