@@ -16,6 +16,7 @@ import { useGetRecentActivitiesQuery } from '../../apiSlice/activitiesApiSlice';
 import { useGetJobSeekersForConsultantQuery } from '../../apiSlice/jobSeekersApiSlice';
 import { Badge } from '../../components/ui/badge';
 import { Navbar } from '../../components/navbar';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 
 interface DashboardActivityLog {
   connections: { total: number; new: number };
@@ -26,6 +27,14 @@ interface DashboardActivityLog {
 }
 
 export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  );
+}
+
+function DashboardContent() {
   const { user } = useUser();
   const [activeSection, setActiveSection] = useState('overview');
   

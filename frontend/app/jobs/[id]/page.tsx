@@ -4,8 +4,17 @@ import React from 'react';
 import { useGetJobByIdQuery } from '../../../apiSlice/jobsApiSlice';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/navbar';
+import { ProtectedRoute } from '../../../components/auth/ProtectedRoute';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
+  return (
+    <ProtectedRoute>
+      <JobDetailsContent params={params} />
+    </ProtectedRoute>
+  );
+}
+
+function JobDetailsContent({ params }: { params: { id: string } }) {
   // Get the id directly from params
   const { id } = params;
   const router = useRouter();

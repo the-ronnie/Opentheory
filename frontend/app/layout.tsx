@@ -4,6 +4,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
 import { Providers } from './providers';
+import { ToastProvider } from '../components/ui/use-toast';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
         <Providers>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </Providers>
       </body>
     </html>

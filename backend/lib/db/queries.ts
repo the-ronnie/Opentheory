@@ -243,6 +243,15 @@ export async function getAllActiveJobs(limit = 50, offset = 0) {
     .offset(offset);
 }
 
+export async function getAllJobs(limit = 50, offset = 0) {
+  return await db
+    .select()
+    .from(jobs)
+    .orderBy(desc(jobs.postedDate))
+    .limit(limit)
+    .offset(offset);
+}
+
 export async function searchJobs(params: {
   title?: string;
   company?: string;

@@ -30,8 +30,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../components/ui/dialog"
+import { ProtectedRoute } from "../../../components/auth/ProtectedRoute"
 
 export default function JobSeekerProfilePage() {
+  return (
+    <ProtectedRoute>
+      <JobSeekerProfileContent />
+    </ProtectedRoute>
+  )
+}
+
+function JobSeekerProfileContent() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string

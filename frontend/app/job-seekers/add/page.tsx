@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "../../../components/ui/aler
 import { useCreateJobSeekerMutation } from "../../../apiSlice/jobSeekersApiSlice";
 import { useUser } from '../../../components/auth/UserProvider';
 import Link from "next/link";
+import { ProtectedRoute } from "../../../components/auth/ProtectedRoute";
 
 // Update the schema to handle resume as a string path
 const jobseekerSchema = z.object({
@@ -28,6 +29,14 @@ const jobseekerSchema = z.object({
 });
 
 export default function AddJobseekerPage() {
+  return (
+    <ProtectedRoute>
+      <AddJobseekerContent />
+    </ProtectedRoute>
+  );
+}
+
+function AddJobseekerContent() {
   const { user } = useUser();
   const {
     register,

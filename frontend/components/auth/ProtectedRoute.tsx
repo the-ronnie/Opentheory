@@ -10,7 +10,7 @@ import { useGetCurrentUserQuery } from '../../apiSlice/userApiSlice';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: string;
-  allowUnauthenticated?: boolean; // Add this prop for landing page
+  allowUnauthenticated?: boolean;
 }
 
 export function ProtectedRoute({ 
@@ -35,15 +35,32 @@ export function ProtectedRoute({
     // Skip if still loading or already redirected
     if (isLoading || isApiLoading || redirected.current) return;
     
+    // User exists but is checking non-admin routes as an admin
+    if (user && user.role === "admin" && pathname !== "/admin" && !pathname.startsWith("/admin/")) {
+      redirected.current = true;
+      // Redirect admin to admin dashboard
+      router.push('/admin');
+      return;
+    }
+
     // Handle unauthenticated users
     if (!allowUnauthenticated && (apiError || !user)) {
       redirected.current = true;
       // Redirect to sign-in page with redirect back to current page
       router.push(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
-    } else if (user && requiredRole && user.role !== requiredRole) {
+      return;
+    } 
+    
+    // Handle role-specific access
+    if (user && requiredRole && user.role !== requiredRole) {
       redirected.current = true;
-      // If a specific role is required and user doesn't have it, redirect to pricing
-      router.push('/pricing');
+      // If a specific role is required and user doesn't have it
+      if (user.role === "admin") {
+        router.push('/admin'); // Admin trying to access non-admin page
+      } else {
+        router.push('/'); // Non-admin trying to access admin page
+      }
+      return;
     }
   }, [isLoading, isApiLoading, user, apiUser, apiError, router, requiredRole, setUser, allowUnauthenticated, pathname]);
 
@@ -56,12 +73,18 @@ export function ProtectedRoute({
     );
   }
 
-  // If this route allows unauthenticated users or user is authenticated, render children
+  // If this route allows unauthenticated users or user is authenticated
   if (allowUnauthenticated || user) {
     // If role is required and user doesn't have it, don't render children
     if (user && requiredRole && user.role !== requiredRole) {
       return null;
     }
+    
+    // Admin users can only access admin pages
+    if (user?.role === "admin" && pathname !== "/admin" && !pathname.startsWith("/admin/")) {
+      return null;
+    }
+    
     return <>{children}</>;
   }
 

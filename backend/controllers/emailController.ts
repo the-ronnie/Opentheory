@@ -34,6 +34,21 @@ const jobOpportunityEmailSchema = z.object({
   contactEmail: z.string().email()
 });
 
+// Validate support request email
+const supportRequestSchema = z.object({
+  to: z.string().email(),
+  subject: z.string().min(1),
+  html: z.string().min(1),
+  cc: z.union([z.string().email(), z.array(z.string().email())]).optional(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  company: z.string().min(1),
+  issueType: z.string().min(1),
+  priority: z.string().min(1),
+  message: z.string().min(1),
+});
+
 // In-memory OTP storage (For production, consider using a database)
 const otpStore: Record<string, { otp: string; expires: Date }> = {};
 
@@ -137,6 +152,50 @@ export const sendJobOpportunityEmail = async (req: Request, res: Response) => {
     } else {
       console.error('Email sending error:', error);
       res.status(500).json({ error: 'Failed to send job opportunity email' });
+    }
+  }
+};
+
+// Send a support request email
+export const sendSupportRequestEmail = async (req: Request, res: Response) => {
+  try {
+    const validatedData = supportRequestSchema.parse(req.body);
+    
+    // Generate ticket ID if not provided
+    const ticketId = req.body.ticketId || `${Date.now().toString().slice(-8)}`;
+    
+    // Send the email using the generic email function
+    const emailData = {
+      to: validatedData.to,
+      subject: validatedData.subject,
+      html: validatedData.html,
+      cc: validatedData.cc,
+    };
+    
+    const success = await emailService.sendEmail(emailData);
+    
+    if (success) {
+      // In a production app, you would also save the ticket to a database here
+      res.status(200).json({ 
+        success: true, 
+        message: 'Support request submitted successfully',
+        ticketId 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to submit support request' 
+      });
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ 
+        error: 'Invalid input data', 
+        details: error.errors 
+      });
+    } else {
+      console.error('Support request error:', error);
+      res.status(500).json({ error: 'Failed to submit support request' });
     }
   }
 };
