@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
-import {useUser} from '../../components/auth/UserProvider';
+import { useUser } from '../../components/auth/UserProvider';
 import Navbar from "@/components/navbar"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Download, FileText, Plus, Search, Trash2, User } from "lucide-react"
@@ -34,7 +34,7 @@ export default function JobSeekersPage() {
 }
 
 function JobSeekersContent() {
-    const { user } = useUser();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedJobSeeker, setSelectedJobSeeker] = useState<string | null>(null)
   //console.log(user);
@@ -43,23 +43,23 @@ function JobSeekersContent() {
   const params = useParams();
   const consultantId = user?.id
     ? String(user.id) // Ensure it's a string
-    : (Array.isArray(params.consultantId) 
-        ? params.consultantId[0] 
-        : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9");
-  
+    : (Array.isArray(params.consultantId)
+      ? params.consultantId[0]
+      : params.consultantId ?? "3ba31c7d-c7de-485d-811b-5949c491f8d9");
+
   //console.log(consultantId);
-  const resumePath = `/resumes/haha.pdf`
+
   // Fetch job seekers for the current consultant
-  const { 
-    data: jobSeekersData, 
-    isLoading, 
-    isError, 
-    error 
-  } = useGetJobSeekersForConsultantQuery({ 
-    consultantId, 
-    queryParams: { limit: 50, offset: 0 } 
+  const {
+    data: jobSeekersData,
+    isLoading,
+    isError,
+    error
+  } = useGetJobSeekersForConsultantQuery({
+    consultantId,
+    queryParams: { limit: 50, offset: 0 }
   })
-  
+
   // Delete job seeker mutation
   const [deleteJobSeeker, { isLoading: isDeleting }] = useDeleteJobSeekerMutation()
 
@@ -97,7 +97,7 @@ function JobSeekersContent() {
           <span className="mx-2">/</span>
           <span className="font-medium text-foreground">Job Seekers</span>
         </div>
-        
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Job Seekers</h2>
@@ -160,110 +160,115 @@ function JobSeekersContent() {
         {!isLoading && !isError && (
           <div className="grid gap-6">
             {filteredJobSeekers.length > 0 ? (
-              filteredJobSeekers.map((jobSeeker) => (
-                <Card key={jobSeeker.id} className="border-border shadow-sm hover:shadow-md transition-all duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-start gap-6">
-                      <Avatar className="h-16 w-16 border-2 border-border">
-                        <AvatarImage src={`/avatars/${jobSeeker.id}.png`} alt={jobSeeker.name} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-lg">{jobSeeker.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <Link href={`/job-seekers/${jobSeeker.id}`} className="hover:text-primary transition-colors">
-                            <h3 className="font-semibold text-xl">{jobSeeker.name}</h3>
-                          </Link>
-                          <div className="flex items-center gap-2">
+              filteredJobSeekers.map((jobSeeker) => {
+                const resumePath = jobSeeker.resume ? `http://localhost:5000${jobSeeker.resume}` : null;
+                return (
+                  <Card key={jobSeeker.id} className="border-border shadow-sm hover:shadow-md transition-all duration-200">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-start gap-6">
+                        <Avatar className="h-16 w-16 border-2 border-border">
+                          <AvatarImage src={`/avatars/${jobSeeker.id}.png`} alt={jobSeeker.name} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-lg">{jobSeeker.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <Link href={`/job-seekers/${jobSeeker.id}`} className="hover:text-primary transition-colors">
+                              <h3 className="font-semibold text-xl">{jobSeeker.name}</h3>
+                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Button variant="outline" size="sm" className="h-9 border-border" asChild>
+                                <Link href={`/job-seekers/${jobSeeker.id}`}>
+                                  <User className="mr-2 h-4 w-4" />
+                                  View Profile
+                                </Link>
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 border-border hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => setSelectedJobSeeker(jobSeeker.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>Delete Job Seeker</DialogTitle>
+                                    <DialogDescription>
+                                      Are you sure you want to delete {jobSeeker.name}'s profile? This action cannot be
+                                      undone.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <DialogFooter className="gap-2 sm:justify-end">
+                                    <Button variant="outline" onClick={() => setSelectedJobSeeker(null)}>Cancel</Button>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() => handleDeleteJobSeeker(jobSeeker.id)}
+                                      disabled={isDeleting}
+                                    >
+                                      {isDeleting ? "Deleting..." : "Delete"}
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                              <span className="text-muted-foreground">{jobSeeker.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                              <span className="text-muted-foreground">{jobSeeker.phone}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                              <span className="text-muted-foreground">{jobSeeker.location}</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-2">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Skills</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {jobSeeker.skills.slice(0, 5).map((skill) => (
+                                <Badge key={skill} variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {jobSeeker.skills.length > 5 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{jobSeeker.skills.length - 5} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 pt-3 mt-2 border-t">
+                            {resumePath && (
+                              <Button variant="outline" size="sm" className="h-9 border-border" asChild>
+                                <Link href={resumePath} target="_blank" download>
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Resume
+                                </Link>
+                              </Button>
+                            )}
                             <Button variant="outline" size="sm" className="h-9 border-border" asChild>
-                              <Link href={`/job-seekers/${jobSeeker.id}`}>
-                                <User className="mr-2 h-4 w-4" />
-                                View Profile
+                              <Link href={`/jobs?jobSeekerId=${jobSeeker.id}&jobSeekerName=${jobSeeker.name}`}>
+                                <Search className="mr-2 h-4 w-4" />
+                                Find Jobs
                               </Link>
                             </Button>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-9 w-9 border-border hover:bg-destructive/10 hover:text-destructive"
-                                  onClick={() => setSelectedJobSeeker(jobSeeker.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>Delete Job Seeker</DialogTitle>
-                                  <DialogDescription>
-                                    Are you sure you want to delete {jobSeeker.name}'s profile? This action cannot be
-                                    undone.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter className="gap-2 sm:justify-end">
-                                  <Button variant="outline" onClick={() => setSelectedJobSeeker(null)}>Cancel</Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    onClick={() => handleDeleteJobSeeker(jobSeeker.id)}
-                                    disabled={isDeleting}
-                                  >
-                                    {isDeleting ? "Deleting..." : "Delete"}
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
                           </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
-                            <span className="text-muted-foreground">{jobSeeker.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            <span className="text-muted-foreground">{jobSeeker.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                            <span className="text-muted-foreground">{jobSeeker.location}</span>
-                          </div>
-                        </div>
-
-                        <div className="pt-2">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Skills</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {jobSeeker.skills.slice(0, 5).map((skill) => (
-                              <Badge key={skill} variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
-                                {skill}
-                              </Badge>
-                            ))}
-                            {jobSeeker.skills.length > 5 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{jobSeeker.skills.length - 5} more
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 pt-3 mt-2 border-t">
-                          <Button variant="outline" size="sm" className="h-9 border-border" asChild>
-                            <Link href={resumePath} target="_blank" download>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Resume
-                            </Link>
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-9 border-border" asChild>
-                            <Link href={`/jobs?jobSeekerId=${jobSeeker.id}&jobSeekerName=${jobSeeker.name}`}>
-                              <Search className="mr-2 h-4 w-4" />
-                              Find Jobs
-                            </Link>
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                )
+              })
             ) : (
               <Card className="border-border shadow-sm">
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center">

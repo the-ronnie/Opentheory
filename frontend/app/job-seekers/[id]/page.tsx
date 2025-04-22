@@ -44,13 +44,13 @@ function JobSeekerProfileContent() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
-  //console.log(id);
+  console.log(id);
   //console.log("is it coming hereb again");
   const [jobSeeker, setJobSeeker] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [isResumeOpen, setIsResumeOpen] = useState(false)
-
+  
   useEffect(() => {
     async function fetchJobSeeker() {
       try {
@@ -58,6 +58,7 @@ function JobSeekerProfileContent() {
         if (!response.ok) throw new Error("Job Seeker not found")
         const data = await response.json()
         setJobSeeker(data)
+        console.log(data);
       } catch (err) {
         setError(true)
       } finally {
@@ -79,7 +80,8 @@ function JobSeekerProfileContent() {
   }
 
   // Resume file path based on job seeker ID
-  const resumePath = `/resumes/haha.pdf`
+  const resumePath = `http://localhost:5000${jobSeeker?.resume}`
+  // console.log(resumePath);
 
   if (loading) {
     return <p className="text-center mt-10">Loading...</p>

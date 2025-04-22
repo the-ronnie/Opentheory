@@ -95,39 +95,86 @@ function AddJobseekerContent() {
     setProgress(calculateProgress());
   }, [formValues]);
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileSelected(true);
-      setFileName(file.name);
-      
-      // Create a mock file path for demonstration
-      const mockFilePath = `/uploads/${user?.id}/${Date.now()}_${file.name}`;
-      
-      // Set the resume value in the form
-      setValue("resume", mockFilePath, { shouldValidate: true });
-    } else {
+  const API_BASE_URL ='http://localhost:5000';
+const handleFileChange = async (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setFileSelected(true);
+    setFileName(file.name);
+
+    // Debug the entire user object
+    console.log("User object:", user);
+    console.log("User ID:", user?.id);
+
+    // Check if user exists and has an id before proceeding
+    if (!user || !user.id) {
+      setServerError("User authentication required. Please login again.");
       setFileSelected(false);
       setFileName("");
-      setValue("resume", "", { shouldValidate: true });
+      return;
     }
-  };
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      console.log(user?.id);
+      const response = await fetch(`${API_BASE_URL}/api/upload/resume?consultantId=${user.id}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const data = await response.json();
+      setValue("resume", data.filePath, { shouldValidate: true });
+    } catch (error) {
+      setServerError("Failed to upload resume. Please try again.");
+      setFileSelected(false);
+      setFileName("");
+    }
+  } else {
+    setFileSelected(false);
+    setFileName("");
+    setValue("resume", "", { shouldValidate: true });
+  }
+};
 
   // Handle file drop
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer?.files?.[0];
-    if (file) {
-      setFileSelected(true);
-      setFileName(file.name);
-      
-      const mockFilePath = `/uploads/${user?.id}/${Date.now()}_${file.name}`;
-      setValue("resume", mockFilePath, { shouldValidate: true });
+ // Handle file drop
+ // Update the handleDrop function to use the same API URL:
+ const handleDrop = async (e) => {
+  e.preventDefault();
+  setIsDragging(false);
+
+  const file = e.dataTransfer?.files?.[0];
+  if (file) {
+    setFileSelected(true);
+    setFileName(file.name);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_BASE_URL}/api/upload/resume?consultantId=${user?.id}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const data = await response.json();
+      setValue("resume", data.filePath, { shouldValidate: true });
+    } catch (error) {
+      setServerError("Failed to upload resume. Please try again.");
+      setFileSelected(false);
+      setFileName("");
     }
-  };
+  }
+};
 
   // Handle drag events
   const handleDragOver = (e) => {
