@@ -34,6 +34,32 @@ function JobDetailsContent({ params }: { params: { id: string } }) {
     router.back();
   };
 
+  // Handle email application
+  const handleApply = () => {
+    if (job && job.email) {
+      const subject = `Application for ${job.title} position`;
+      
+      // Format skills as a bullet point list
+      const skillsList = job.skills.map(skill => `• ${skill}`).join('\n');
+      
+      const body = `Dear Hiring Manager,
+
+I am writing to express my interest in the ${job.title} position at ${job.company}.
+
+[Include your introduction and qualifications here]
+
+I have experience with the required skills for this role:
+${skillsList}
+
+Thank you for considering my application.
+
+Sincerely,
+[Your Name]`;
+      
+      window.location.href = `mailto:${job.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -143,12 +169,14 @@ function JobDetailsContent({ params }: { params: { id: string } }) {
                 <div className="mt-10 pt-6 border-t border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900">Interested in this position?</h2>
                   <div className="mt-4">
-                    <button className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    <button 
+                      onClick={handleApply}
+                      className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                       Apply Now
                     </button>
-                    {/* <p className="mt-2 text-sm text-gray-500">
-                      Or contact your consultant for more information about this role.
-                    </p> */}
+                    <p className="mt-2 text-sm text-gray-500">
+                      This will open your email client to send an application to {job.email || "the employer"}.
+                    </p>
                   </div>
                 </div>
               )}
