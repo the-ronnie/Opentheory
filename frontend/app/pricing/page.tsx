@@ -174,8 +174,8 @@ export default function PricingPage() {
         {/* Call to Action */}
         <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
           <div className="container px-4 md:px-6 text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform your consulting business?</h2>
-            <p className="mx-auto max-w-[700px] mb-10 text-lg opacity-90">Join thousands of successful consultants who have streamlined their job placement process.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-black">Ready to transform your consulting business?</h2>
+            <h2 className="mx-auto max-w-[700px] mb-10 text-lg opacity-90">Join thousands of successful consultants who have streamlined their job placement process.</h2>
             <Button 
               variant="secondary" 
               size="lg"

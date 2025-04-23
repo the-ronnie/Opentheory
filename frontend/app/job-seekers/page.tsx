@@ -24,7 +24,7 @@ import { useParams } from "next/navigation"
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute"
 import React from "react"
 
-//import { toast } from "../../components/ui/use-toast"
+import { useToast } from "../../components/ui/use-toast"
 export default function JobSeekersPage() {
   return (
     <ProtectedRoute>
@@ -35,6 +35,7 @@ export default function JobSeekersPage() {
 
 function JobSeekersContent() {
   const { user } = useUser();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedJobSeeker, setSelectedJobSeeker] = useState<string | null>(null)
   //console.log(user);
@@ -91,13 +92,6 @@ function JobSeekersContent() {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-primary transition-colors">Dashboard</Link>
-          <span className="mx-2">/</span>
-          <span className="font-medium text-foreground">Job Seekers</span>
-        </div>
-
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Job Seekers</h2>

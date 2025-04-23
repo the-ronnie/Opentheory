@@ -595,8 +595,10 @@ export default function SupportPage() {
                 Upgrade to premium for advanced resume analytics, priority job matching, and exclusive job listings.
               </p>
             </div>
-            <Button className="bg-primary hover:bg-primary/90 text-white py-3 px-8">
-              View Premium Plans
+            <Button className="bg-primary hover:bg-primary/90 text-white py-3 px-8" asChild>
+              <Link href="/pricing">
+                View Premium Plans
+              </Link>
             </Button>
           </div>
         </div>
