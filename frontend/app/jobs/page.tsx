@@ -8,8 +8,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {useUser} from '../../components/auth/UserProvider';
 import Link from 'next/link';
 import { Navbar } from '../../components/navbar';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 
 export default function JobsPage() {
+  return (
+    <ProtectedRoute>
+      <JobsContent />
+    </ProtectedRoute>
+  );
+}
+
+function JobsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [page, setPage] = useState(0);

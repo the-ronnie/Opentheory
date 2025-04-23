@@ -5,7 +5,8 @@ import {
   sendJobSeekerEmail,
   sendJobOpportunityEmail,
   verifyEmailService,
-  sendTestEmail
+  sendTestEmail,
+  sendSupportRequestEmail
 } from '../controllers/emailController';
 
 const router = Router();
@@ -21,6 +22,9 @@ router.post('/job-opportunity', requireAuth, sendJobOpportunityEmail);
 
 // Route to verify email service connection (admin only)
 router.get('/verify', requireAdmin, verifyEmailService);
+
+// Route to send a support request email
+router.post('/support', sendSupportRequestEmail);
 
 // Test route for development only
 if (process.env.NODE_ENV !== 'production') {

@@ -3,6 +3,7 @@ import {
   createJob,
   getJobById,
   getAllActiveJobs,
+  getAllJobs,
   searchJobs,
   updateJob,
   closeJob,
@@ -67,6 +68,19 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Get jobs error:', error);
     return res.status(500).json({ error: 'Failed to fetch jobs' });
+  }
+});
+
+router.get('/all', async (req: Request, res: Response) => {
+  try {
+    const limit = Number(req.query.limit) || 50;
+    const offset = Number(req.query.offset) || 0;
+    
+    const jobs = await getAllJobs(limit, offset);
+    return res.status(200).json(jobs);
+  } catch (error) {
+    console.error('Get all jobs error:', error);
+    return res.status(500).json({ error: 'Failed to fetch all jobs' });
   }
 });
 

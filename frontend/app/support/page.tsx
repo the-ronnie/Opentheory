@@ -3,12 +3,17 @@
 import React, { useState } from 'react';
 import { Button } from "../../components/ui/button";
 import Link from 'next/link';
-import { Mail, Phone, MessageSquare, HelpCircle, FileText, ArrowRight, ChevronDown, Search, Clock } from 'lucide-react';
+import { 
+  Mail, Phone, MessageSquare, HelpCircle, FileText, 
+  ArrowRight, ChevronDown, Search, Clock,
+  Check, AlertCircle, Loader2
+} from 'lucide-react';
 import Navbar from "../../components/navbar";
 import ChatBot from "../../components/chat-bot";
+import { useSendSupportEmailMutation } from "../../apiSlice/emailApiSlice";
+import { generateSupportRequestEmail } from '../../components/supportMail';
 
 export default function SupportPage() {
-  // Add state for dropdowns and form
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState("Select issue type");
   const [selectedPriority, setSelectedPriority] = useState("Select priority");
@@ -17,8 +22,10 @@ export default function SupportPage() {
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [sendSupportEmail] = useSendSupportEmailMutation();
 
-  // Updated FAQ data for consultant job platform
   const faqData = [
     {
       id: 'faq1',
@@ -72,29 +79,14 @@ export default function SupportPage() {
     }
   ];
 
-  // Toggle dropdown visibility
   const toggleDropdown = (id: string) => {
     setActiveDropdown(activeDropdown === id ? null : id);
   };
 
-  // Form submission handler
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert("Support request submitted. Our team will contact you within 24 hours.");
-    }, 1500);
-  };
-
-  // Search functionality
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
-    // Simulate search through FAQs
     const results = faqData
       .filter(faq => 
         faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -105,18 +97,73 @@ export default function SupportPage() {
     setSearchResults(results);
     setShowSearchResults(true);
     
-    // Automatically open matching FAQs
     results.forEach(question => {
       const faq = faqData.find(f => f.question === question);
       if (faq) setActiveDropdown(faq.id);
     });
   };
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    setIsSubmitting(true);
+    setSubmissionError(null);
+    
+    const formData = new FormData(form);
+    const firstName = formData.get('first-name') as string;
+    const lastName = formData.get('last-name') as string;
+    const email = formData.get('email') as string;
+    const company = formData.get('company') as string;
+    const message = formData.get('message') as string;
+    
+    const ticketId = `${Date.now().toString().slice(-8)}`;
+    
+    try {
+      const emailHtml = generateSupportRequestEmail({
+        firstName,
+        lastName,
+        email,
+        company,
+        issueType: selectedIssue,
+        priority: selectedPriority,
+        message,
+        ticketId
+      });
+      
+      await sendSupportEmail({
+        to: email,
+        subject: "Your OpenTheory Support Request Confirmation",
+        html: emailHtml,
+        cc: "help@opentheory.in",
+        firstName,
+        lastName,
+        email,
+        company,
+        issueType: selectedIssue,
+        priority: selectedPriority,
+        message
+      }).unwrap();
+      
+      form.reset();
+      setSelectedIssue("Select issue type");
+      setSelectedPriority("Select priority");
+      setSubmissionSuccess(true);
+      
+      setTimeout(() => {
+        setSubmissionSuccess(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Failed to send confirmation email:", error);
+      setSubmissionError("Failed to submit your request. Please try again or contact us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       
-      {/* Hero Section with Search Bar */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         <div className="container px-4 md:px-6 text-center mx-auto relative z-10">
@@ -131,7 +178,6 @@ export default function SupportPage() {
               Get assistance with your job search, resume management, and account settings. Our team is ready to help you find your perfect tech opportunity.
             </p>
             
-            {/* Search Bar with functionality */}
             <div className="relative w-full max-w-2xl mt-4">
               <form onSubmit={handleSearch} className="relative">
                 <div className="flex items-center border-2 border-border rounded-lg overflow-hidden">
@@ -154,7 +200,6 @@ export default function SupportPage() {
                 </div>
               </form>
               
-              {/* Search Results */}
               {showSearchResults && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-30">
                   <div className="p-4">
@@ -169,7 +214,6 @@ export default function SupportPage() {
                               const faq = faqData.find(f => f.question === result);
                               if (faq) {
                                 setActiveDropdown(faq.id);
-                                // Scroll to the FAQ section
                                 document.getElementById('faq-section')?.scrollIntoView({
                                   behavior: 'smooth'
                                 });
@@ -198,7 +242,6 @@ export default function SupportPage() {
         </div>
       </section>
 
-      {/* Contact Methods Section with Status Badge */}
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid gap-6 lg:grid-cols-3 lg:gap-12 max-w-5xl mx-auto">
@@ -267,7 +310,6 @@ export default function SupportPage() {
         </div>
       </section>
 
-      {/* Contact Form Section with Custom Dropdown - IMPROVED ALIGNMENT */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted" id="faq-section">
         <div className="container px-4 md:px-6 mx-auto text-center">
           <div className="flex flex-col items-center space-y-4 mb-8 max-w-3xl mx-auto">
@@ -281,12 +323,9 @@ export default function SupportPage() {
           </div>
           
           <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
-            {/* IMPROVED: FAQ section with matching styling to the form */}
             <div className="text-left rounded-lg border-2 border-border bg-card p-6 shadow-md">
               <h3 className="text-xl font-bold mb-6 text-center">Frequently Asked Questions</h3>
-              
-{/* FAQ accordion with more questions */}
-<div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {faqData.map(faq => (
                   <div key={faq.id} className="border border-border rounded-lg overflow-hidden bg-card">
                     <button 
@@ -321,6 +360,7 @@ export default function SupportPage() {
                     </label>
                     <input 
                       id="first-name" 
+                      name="first-name"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="John" 
                       required 
@@ -332,6 +372,7 @@ export default function SupportPage() {
                     </label>
                     <input 
                       id="last-name" 
+                      name="last-name"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="Doe" 
                       required 
@@ -344,6 +385,7 @@ export default function SupportPage() {
                   </label>
                   <input 
                     id="email" 
+                    name="email"
                     type="email" 
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="john@company.com" 
@@ -356,13 +398,13 @@ export default function SupportPage() {
                   </label>
                   <input 
                     id="company" 
+                    name="company"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="Acme Corporation" 
                     required 
                   />
                 </div>
                 
-                {/* Custom Select/Dropdown for Issue Type */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Issue Type*
@@ -398,7 +440,6 @@ export default function SupportPage() {
                   </div>
                 </div>
                 
-                {/* Custom Select/Dropdown for Priority */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Priority*
@@ -446,6 +487,7 @@ export default function SupportPage() {
                   </label>
                   <textarea
                     id="message"
+                    name="message"
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="Please describe your issue in detail including any error messages, steps to reproduce, and affected systems..."
                     rows={5}
@@ -453,16 +495,23 @@ export default function SupportPage() {
                   />
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="urgent"
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="urgent" className="text-sm font-medium">
-                    Mark as urgent (will trigger SMS notification to support team)
-                  </label>
-                </div>
+                {submissionSuccess && (
+                  <div className="p-3 rounded-md bg-green-50 text-green-700 border border-green-200">
+                    <p className="text-sm flex items-center">
+                      <Check className="h-4 w-4 mr-2" />
+                      Support request submitted successfully. A confirmation email has been sent to your inbox.
+                    </p>
+                  </div>
+                )}
+                
+                {submissionError && (
+                  <div className="p-3 rounded-md bg-red-50 text-red-700 border border-red-200">
+                    <p className="text-sm flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      {submissionError}
+                    </p>
+                  </div>
+                )}
                 
                 <Button 
                   type="submit" 
@@ -470,7 +519,10 @@ export default function SupportPage() {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <>Processing...</>
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
                   ) : (
                     <>Submit Enterprise Request <ArrowRight className="ml-2 h-4 w-4" /></>
                   )}
@@ -485,7 +537,6 @@ export default function SupportPage() {
         </div>
       </section>
 
-      {/* Resources Section with Hover Effects */}
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6 mx-auto text-center">
           <div className="flex flex-col items-center space-y-4 mb-12 max-w-3xl mx-auto">
@@ -535,7 +586,6 @@ export default function SupportPage() {
         </div>
       </section>
       
-      {/* Premium Features Section */}
       <section className="w-full py-12 md:py-16 bg-muted">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between md:space-x-8 space-y-6 md:space-y-0">
@@ -552,8 +602,7 @@ export default function SupportPage() {
         </div>
       </section>
 
-      {/* Chatbot Component */}
       <ChatBot isOpen={chatbotOpen} onClose={() => setChatbotOpen(false)} />
     </div>
-  )
+  );
 }

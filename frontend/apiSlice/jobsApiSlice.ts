@@ -44,6 +44,12 @@ export type JobSearchParams = {
 
 export const jobsApiSlice = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    getAllJobs: builder.query<Job[], QueryParams>({
+      query: ({ limit = 50, offset = 0 }) => 
+        `/jobs/all?limit=${limit}&offset=${offset}`,
+      providesTags: ['Job'],
+    }),
+
     getAllActiveJobs: builder.query<Job[], QueryParams>({
       query: ({ limit = 50, offset = 0 }) => 
         `/jobs?limit=${limit}&offset=${offset}`,
@@ -114,6 +120,7 @@ export const jobsApiSlice = baseApiSlice.injectEndpoints({
 });
 
 export const {
+  useGetAllJobsQuery,
   useGetAllActiveJobsQuery,
   useGetJobByIdQuery,
   useCreateJobMutation,

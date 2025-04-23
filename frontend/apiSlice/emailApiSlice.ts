@@ -29,9 +29,27 @@ export interface JobOpportunityEmailRequest {
   contactEmail: string;
 }
 
+export interface SupportEmailRequest {
+  to: string;
+  subject: string;
+  html: string;
+  cc?: string | string[];
+  firstName: string;
+  lastName: string;
+  email: string;
+  company: string;
+  issueType: string;
+  priority: string;
+  message: string;
+}
+
 export interface EmailResponse {
   success: boolean;
   message: string;
+}
+
+export interface SupportEmailResponse extends EmailResponse {
+  ticketId?: string;
 }
 
 // Create the API slice
@@ -77,6 +95,15 @@ export const emailApiSlice = baseApiSlice.injectEndpoints({
         body: data,
       }),
     }),
+
+    // Send a support request email
+    sendSupportEmail: builder.mutation<SupportEmailResponse, SupportEmailRequest>({
+      query: (data) => ({
+        url: '/emails/support',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -87,4 +114,5 @@ export const {
   useSendJobOpportunityEmailMutation,
   useVerifyEmailServiceQuery,
   useSendTestEmailMutation,
+  useSendSupportEmailMutation,
 } = emailApiSlice;

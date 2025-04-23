@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import React from 'react';
 import { usePathname } from "next/navigation";
-import { Code, Home, LifeBuoy, LogOut, Menu, Search, User, Users, X } from "lucide-react";
+import { Code, Home, LifeBuoy, LogOut, Menu, Search, Shield, User, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
@@ -39,28 +39,41 @@ export function Navbar() {
       name: "Home",
       path: "/",
       icon: <Home className="h-4 w-4 mr-2" />,
+      showForAdmin: false,
     },
     {
       name: "Dashboard",
       path: "/dashboard",
       icon: <Code className="h-4 w-4 mr-2" />,
+      showForAdmin: false, 
     },
     {
       name: "Jobs",
       path: "/jobs",
       icon: <Search className="h-4 w-4 mr-2" />,
+      showForAdmin: false, 
     },
     {
       name: "Job Seekers",
       path: "/job-seekers",
       icon: <Users className="h-4 w-4 mr-2" />,
+      showForAdmin: false,
     },
     {
       name: "Support",
       path: "/support",
       icon: <LifeBuoy className="h-4 w-4 mr-2" />,
+      showForAdmin: false,
     },
   ];
+
+  // Admin-only route
+  const adminRoute = {
+    name: "Admin",
+    path: "/admin",
+    icon: <Shield className="h-4 w-4 mr-2" />,
+    showForAdmin: true, // Always show for admin users
+  };
 
   // Routes for unauthenticated users
   const unauthenticatedRoutes = [
@@ -72,7 +85,18 @@ export function Navbar() {
   ];
 
   // Choose routes based on authentication state
-  const routes = user ? authenticatedRoutes : unauthenticatedRoutes;
+  let routes = user ? authenticatedRoutes : unauthenticatedRoutes;
+  
+  // Filter routes based on user role
+  if (user) {
+    if (user.role === "admin") {
+      // For admin users, only show routes marked as showForAdmin
+      routes = routes.filter(route => route.showForAdmin);
+      // Add admin route for admin users
+      routes = [...routes, adminRoute];
+    }
+    // For non-admin users, show all authenticated routes (no filtering needed)
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -123,7 +147,7 @@ export function Navbar() {
               ) : user ? (
                 <>
                   <Button variant="ghost" asChild>
-                    <Link href="/profile">
+                    <Link href={user.role === 'admin' ? '/admin' : '/profile'}>
                       <User className="mr-2 h-4 w-4" />
                       {user.name || 'My Account'}
                     </Link>
@@ -190,7 +214,7 @@ export function Navbar() {
               ) : user ? (
                 <>
                   <Link
-                    href="/profile"
+                    href={user.role === 'admin' ? '/admin' : '/profile'}
                     className="text-sm font-medium flex items-center py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >

@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path'; // Add this line 
 import router from './routes';
 import { optionalAuth } from './lib/auth/middleware';
 import { testDatabaseConnection } from './lib/db/drizzle';
@@ -22,6 +23,8 @@ app.use(cookieParser());
 
 // Optional authentication middleware
 app.use(optionalAuth);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, this is the backend server!');

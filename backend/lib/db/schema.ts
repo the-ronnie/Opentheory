@@ -63,6 +63,7 @@ export const jobs = pgTable('jobs', {
   postedDate: timestamp('posted_date').notNull().defaultNow(),
   deadline: timestamp('deadline').notNull(),
   status: text('status').notNull().default('active'),
+  email: text('email')
 });
 
 // Activity logs table 
