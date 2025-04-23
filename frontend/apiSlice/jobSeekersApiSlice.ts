@@ -106,3 +106,20 @@ export const {
   useSearchJobSeekersQuery,
   useGetJobSeekerActivitiesQuery,
 } = jobSeekersApiSlice;
+
+// Check this file to ensure the endpoint is correctly configured:
+// 
+// It should look something like:
+//
+// export const jobSeekersApi = createApi({
+//   reducerPath: 'jobSeekersApi',
+//   baseQuery: fetchBaseQuery({ baseUrl: '/api', credentials: 'include' }),
+//   endpoints: (builder) => ({
+//     getJobSeekersForConsultant: builder.query<JobSeeker[], void>({
+//       query: () => '/consultants/jobseekers',
+//     }),
+//     // other endpoints...
+//   }),
+// });
+// 
+// export const { useGetJobSeekersForConsultantQuery } = jobSeekersApi;

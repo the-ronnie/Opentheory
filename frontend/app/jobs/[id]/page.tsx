@@ -1,10 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetJobByIdQuery } from '../../../apiSlice/jobsApiSlice';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/navbar';
 import { ProtectedRoute } from '../../../components/auth/ProtectedRoute';
+
+// Fix the import path and add import for user data
+import { useGetJobSeekersForConsultantQuery } from 'frontend/apiSlice/jobSeekersApiSlice';
+import { useGetCurrentUserQuery } from 'frontend/apiSlice/userApiSlice';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   return (
@@ -15,11 +19,41 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 }
 
 function JobDetailsContent({ params }: { params: { id: string } }) {
-  // Get the id directly from params
   const { id } = params;
   const router = useRouter();
   
   const { data: job, isLoading, isError, error } = useGetJobByIdQuery(id);
+  
+  // Get the current user (consultant)
+  const { data: user } = useGetCurrentUserQuery();
+  
+  // Add state for jobseeker selection modal
+  const [showProfileSelector, setShowProfileSelector] = useState(false);
+  
+  // Only fetch job seekers when we have the consultant ID
+  const { 
+    data: jobseekerProfiles, 
+    isLoading: profilesLoading, 
+    isError: isProfilesError,
+    error: profilesError 
+  } = useGetJobSeekersForConsultantQuery(
+    { consultantId: user?.id || '' },
+    { skip: !user?.id }
+  );
+  
+  // Debug log to check if data is being received
+  useEffect(() => {
+    console.log('Current user:', user);
+    if (user) {
+      console.log('Consultant ID:', user.id);
+    }
+    if (jobseekerProfiles) {
+      console.log('Jobseeker profiles loaded:', jobseekerProfiles);
+    }
+    if (isProfilesError) {
+      console.error('Error loading profiles:', profilesError);
+    }
+  }, [user, jobseekerProfiles, isProfilesError, profilesError]);
   
   // Format date to be more readable
   const formatDate = (dateString: string) => {
@@ -34,19 +68,32 @@ function JobDetailsContent({ params }: { params: { id: string } }) {
     router.back();
   };
 
-  // Handle email application
-  const handleApply = () => {
+  // Updated to open profile selector instead of directly sending email
+  const handleApplyClick = () => {
+    setShowProfileSelector(true);
+  };
+
+  // Handle email application with selected profile
+  const handleApply = (profileId: string) => {
     if (job && job.email) {
+      const selectedProfile = jobseekerProfiles?.find(profile => profile.id === profileId);
+      
+      if (!selectedProfile) {
+        alert("Please select a profile to continue.");
+        return;
+      }
+
       const subject = `Application for ${job.title} position`;
       
       // Format skills as a bullet point list
       const skillsList = job.skills.map(skill => `• ${skill}`).join('\n');
       
+      // Include selected profile information
       const body = `Dear Hiring Manager,
 
-I am writing to express my interest in the ${job.title} position at ${job.company}.
+I am ${selectedProfile.name}, writing to express my interest in the ${job.title} position at ${job.company}.
 
-[Include your introduction and qualifications here]
+${selectedProfile.bio || "[Include your introduction and qualifications here]"}
 
 I have experience with the required skills for this role:
 ${skillsList}
@@ -54,10 +101,18 @@ ${skillsList}
 Thank you for considering my application.
 
 Sincerely,
-[Your Name]`;
+${selectedProfile.name}`;
       
       window.location.href = `mailto:${job.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      // Close the modal after sending
+      setShowProfileSelector(false);
     }
+  };
+
+  // Close the profile selector modal
+  const handleCloseSelector = () => {
+    setShowProfileSelector(false);
   };
 
   if (isLoading) {
@@ -170,12 +225,12 @@ Sincerely,
                   <h2 className="text-lg font-semibold text-gray-900">Interested in this position?</h2>
                   <div className="mt-4">
                     <button 
-                      onClick={handleApply}
+                      onClick={handleApplyClick}
                       className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                       Apply Now
                     </button>
                     <p className="mt-2 text-sm text-gray-500">
-                      This will open your email client to send an application to {job.email || "the employer"}.
+                      send an application to {job.email || "the employer"}.
                     </p>
                   </div>
                 </div>
@@ -184,6 +239,81 @@ Sincerely,
           </div>
         </div>
       </div>
+
+      {/* Profile selection modal with improved error handling */}
+      {showProfileSelector && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900">Select a profile to apply with</h3>
+              <button onClick={handleCloseSelector} className="text-gray-500 hover:text-gray-700">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            {!user ? (
+              <div className="py-4 text-center text-gray-500">
+                Loading user information...
+              </div>
+            ) : !user.id ? (
+              <div className="py-4 text-center text-gray-500">
+                Unable to retrieve your consultant ID. Please ensure you're logged in.
+              </div>
+            ) : profilesLoading ? (
+              <div className="py-4 text-center">Loading profiles...</div>
+            ) : isProfilesError ? (
+              <div className="py-4 text-center text-red-500">
+                <p>Error loading profiles.</p>
+                <p className="text-sm mt-2">{profilesError?.toString()}</p>
+              </div>
+            ) : !jobseekerProfiles ? (
+              <div className="py-4 text-center text-gray-500">
+                No profiles data available. Please try again.
+              </div>
+            ) : jobseekerProfiles.length > 0 ? (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {jobseekerProfiles.map((profile) => (
+                  <div 
+                    key={profile.id} 
+                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleApply(profile.id)}
+                  >
+                    <div className="font-medium">{profile.name}</div>
+                    <div className="text-sm text-gray-500 truncate">{profile.email}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-gray-500">
+                <p>No jobseeker profiles found.</p>
+                <p className="text-sm mt-2">Please add a jobseeker profile first or check your consultant permissions.</p>
+              </div>
+            )}
+            
+            {/* Debug info in development mode */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
+                <p>Debug Info:</p>
+                <p>User ID: {user?.id || 'Not available'}</p>
+                <p>Loading: {profilesLoading ? 'true' : 'false'}</p>
+                <p>Error: {isProfilesError ? 'true' : 'false'}</p>
+                <p>Profiles: {jobseekerProfiles ? `${jobseekerProfiles.length} found` : 'null'}</p>
+              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleCloseSelector}
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 rounded-md mr-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
