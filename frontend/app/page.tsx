@@ -42,7 +42,7 @@ export default function HomePage() {
   const { user } = useUser();
   
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       
       {user ? (
@@ -106,29 +106,29 @@ function UnauthenticatedView() {
   return (
     <>
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="flex flex-col justify-center space-y-4">
               <div className="space-y-2">
-                <div className="inline-block px-3 py-1 text-sm font-medium bg-gray-100 rounded-full mb-2">
+                <div className="inline-block px-3 py-1 text-sm font-medium bg-muted rounded-full mb-2">
                   Job Consultant Platform
                 </div>
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-gray-900">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
                   Connect Talent With Opportunity
                 </h1>
-                <p className="max-w-[600px] text-gray-600 md:text-xl">
+                <p className="max-w-[600px] text-muted-foreground md:text-xl">
                   A powerful platform for consultants to manage job seekers, match skills with opportunities, and
                   streamline the recruitment process.
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button className="bg-black hover:bg-gray-800 text-white" size="lg" asChild>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" size="lg" asChild>
                   <Link href="/sign-up">
                     Get Started
                   </Link>
                 </Button>
-                <Button variant="outline" className="text-black border-black hover:bg-gray-100" size="lg" asChild>
+                <Button variant="outline" className="border-border hover:bg-accent" size="lg" asChild>
                   <Link href="/sign-in">
                     Sign In
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -137,14 +137,14 @@ function UnauthenticatedView() {
               </div>
             </div>
             <div 
-              className="mx-auto lg:mx-0 relative aspect-video rounded-xl overflow-hidden shadow-lg border border-gray-200 
+              className="mx-auto lg:mx-0 relative aspect-video rounded-xl overflow-hidden shadow-lg border border-border 
                          transition-all duration-300 ease-in-out transform group
-                         hover:shadow-2xl hover:scale-[1.02] hover:border-gray-300"
+                         hover:shadow-2xl hover:scale-[1.02] hover:border-accent"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               {/* Image container with slides */}
-              <div className="relative w-full h-full bg-gray-50">
+              <div className="relative w-full h-full bg-muted">
                 {images.map((img, index) => (
                   <div 
                     key={index} 
@@ -167,10 +167,10 @@ function UnauthenticatedView() {
                     
                     {/* Fallback if image fails to load */}
                     {!imagesLoaded[index] && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
                         <div className="text-center p-4">
-                          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-500">Loading preview...</p>
+                          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Loading preview...</p>
                         </div>
                       </div>
                     )}
@@ -178,7 +178,7 @@ function UnauthenticatedView() {
                 ))}
                 
                 {/* Image counter badge */}
-                <div className="absolute top-4 right-4 z-20 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+                <div className="absolute top-4 right-4 z-20 bg-background/60 text-foreground text-xs px-2 py-1 rounded-md backdrop-blur-sm">
                   {currentImage + 1} / {images.length}
                 </div>
                 
@@ -187,7 +187,7 @@ function UnauthenticatedView() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full bg-black/30 hover:bg-black/60 text-white h-10 w-10 shadow-lg backdrop-blur-sm 
+                    className="rounded-full bg-background/30 hover:bg-background/60 text-foreground h-10 w-10 shadow-lg backdrop-blur-sm 
                               transition-transform duration-200 hover:scale-110"
                     onClick={(e) => {
                       e.preventDefault();
@@ -200,7 +200,7 @@ function UnauthenticatedView() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full bg-black/30 hover:bg-black/60 text-white h-10 w-10 shadow-lg backdrop-blur-sm
+                    className="rounded-full bg-background/30 hover:bg-background/60 text-foreground h-10 w-10 shadow-lg backdrop-blur-sm
                               transition-transform duration-200 hover:scale-110"
                     onClick={(e) => {
                       e.preventDefault();
@@ -219,8 +219,8 @@ function UnauthenticatedView() {
                       key={index}
                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         currentImage === index 
-                          ? 'bg-white w-6' 
-                          : 'bg-white/50 hover:bg-white/80'
+                          ? 'bg-foreground w-6' 
+                          : 'bg-foreground/50 hover:bg-foreground/80'
                       }`}
                       onClick={() => goToSlide(index)}
                       aria-label={`Go to slide ${index + 1}`}
@@ -230,13 +230,13 @@ function UnauthenticatedView() {
               </div>
               
               {/* Enhanced overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 z-[1] pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/20 z-[1] pointer-events-none"></div>
               
               {/* Caption for current image */}
               <div className="absolute bottom-0 left-0 right-0 p-6 z-[2] transform transition-transform duration-300 ease-in-out">
-                <div className="bg-black/30 backdrop-blur-sm text-white p-3 rounded-lg">
+                <div className="bg-background/30 backdrop-blur-sm text-foreground p-3 rounded-lg">
                   <h3 className="text-lg font-medium">Professional Dashboard</h3>
-                  <p className="text-sm text-gray-200">Powerful tools to connect job seekers with opportunities</p>
+                  <p className="text-sm text-muted-foreground">Powerful tools to connect job seekers with opportunities</p>
                 </div>
               </div>
             </div>
@@ -245,94 +245,94 @@ function UnauthenticatedView() {
       </section>
 
       {/* Features Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-foreground">
                 Powerful Features for Consultants
               </h2>
-              <p className="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Everything you need to manage job seekers and find the perfect job matches.
               </p>
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Upload className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <Upload className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Resume Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Upload and manage resumes for your job seekers. Link them to profiles and track their performance.
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Search className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <Search className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Smart Job Matching</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Our algorithm matches job seekers with opportunities based on their skills, experience, and
                   preferences.
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Filter className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <Filter className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Advanced Filtering</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Filter jobs by technology, location, experience level, and more to find the perfect match.
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Bell className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <Bell className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Job Alerts</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Receive notifications when new jobs matching your job seekers' skills become available.
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <LineChart className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <LineChart className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Analytics Dashboard</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Track resume views, application status, and job seeker performance with detailed analytics.
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200">
+            <Card>
               <CardHeader>
-                <div className="p-2 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Shield className="h-5 w-5 text-gray-900" />
+                <div className="p-2 bg-muted rounded-full w-10 h-10 flex items-center justify-center mb-2">
+                  <Shield className="h-5 w-5 text-foreground" />
                 </div>
                 <CardTitle>Secure Authentication</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   OAuth-based authentication ensures your data and your job seekers' information remains secure.
                 </p>
               </CardContent>
@@ -342,14 +342,14 @@ function UnauthenticatedView() {
       </section>
 
       {/* How It Works */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-white border-t border-b border-gray-200">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-background border-t border-b border-border">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-foreground">
                 How It Works
               </h2>
-              <p className="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Our platform streamlines the job matching process in four simple steps.
               </p>
             </div>
@@ -357,38 +357,38 @@ function UnauthenticatedView() {
 
           <div className="grid gap-8 md:grid-cols-4">
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
-                <User className="h-6 w-6 text-gray-900" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                <User className="h-6 w-6 text-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">1. Create Profile</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-xl font-bold text-foreground">1. Create Profile</h3>
+              <p className="mt-2 text-muted-foreground">
                 Register and set up your consultant profile with your expertise and preferences.
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
-                <Upload className="h-6 w-6 text-gray-900" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                <Upload className="h-6 w-6 text-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">2. Upload Resumes</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-xl font-bold text-foreground">2. Upload Resumes</h3>
+              <p className="mt-2 text-muted-foreground">
                 Add your job seekers and upload their resumes to the platform.
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
-                <FileSearch className="h-6 w-6 text-gray-900" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                <FileSearch className="h-6 w-6 text-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">3. Match Jobs</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-xl font-bold text-foreground">3. Match Jobs</h3>
+              <p className="mt-2 text-muted-foreground">
                 Our algorithm matches job seekers with relevant opportunities based on their skills.
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
-                <BarChart3 className="h-6 w-6 text-gray-900" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                <BarChart3 className="h-6 w-6 text-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">4. Track Progress</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="text-xl font-bold text-foreground">4. Track Progress</h3>
+              <p className="mt-2 text-muted-foreground">
                 Monitor applications, view analytics, and manage your job seekers' progress.
               </p>
             </div>
@@ -397,31 +397,31 @@ function UnauthenticatedView() {
       </section>
 
       {/* Testimonials */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-foreground">
                 What Our Users Say
               </h2>
-              <p className="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Hear from consultants who have transformed their recruitment process with our platform.
               </p>
             </div>
           </div>
 
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
                   <div className="relative">
-                    <div className="absolute -top-2 -left-2 text-gray-200">
+                    <div className="absolute -top-2 -left-2 text-muted-foreground">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                    <p className="text-gray-600 italic pl-6">
+                    <p className="text-muted-foreground italic pl-6">
                       "This platform has revolutionized how I manage my job seekers. The matching algorithm is incredibly
                       accurate, and I've seen a 40% increase in successful placements."
                     </p>
@@ -429,8 +429,8 @@ function UnauthenticatedView() {
                   <div className="flex items-center space-x-4">
                     <div className="rounded-full bg-gradient-to-br from-blue-400 to-purple-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">SJ</div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Sarah Johnson</p>
-                      <p className="text-sm text-gray-500">Senior Recruitment Consultant</p>
+                      <p className="text-sm font-medium text-foreground">Sarah Johnson</p>
+                      <p className="text-sm text-muted-foreground">Senior Recruitment Consultant</p>
                     </div>
                     <div className="ml-auto flex">
                       {[1,2,3,4,5].map((star) => (
@@ -441,17 +441,17 @@ function UnauthenticatedView() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
                   <div className="relative">
-                    <div className="absolute -top-2 -left-2 text-gray-200">
+                    <div className="absolute -top-2 -left-2 text-muted-foreground">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                    <p className="text-gray-600 italic pl-6">
+                    <p className="text-muted-foreground italic pl-6">
                       "The analytics dashboard gives me insights I never had before. I can now make data-driven decisions
                       about which jobs to pursue for my candidates."
                     </p>
@@ -459,8 +459,8 @@ function UnauthenticatedView() {
                   <div className="flex items-center space-x-4">
                     <div className="rounded-full bg-gradient-to-br from-green-400 to-teal-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">MC</div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Michael Chen</p>
-                      <p className="text-sm text-gray-500">Tech Recruitment Specialist</p>
+                      <p className="text-sm font-medium text-foreground">Michael Chen</p>
+                      <p className="text-sm text-muted-foreground">Tech Recruitment Specialist</p>
                     </div>
                     <div className="ml-auto flex">
                       {[1,2,3,4,5].map((star) => (
@@ -471,27 +471,27 @@ function UnauthenticatedView() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card className="shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
                   <div className="relative">
-                    <div className="absolute -top-2 -left-2 text-gray-200">
+                    <div className="absolute -top-2 -left-2 text-muted-foreground">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 10.5C10 11.3 9.3 12 8.5 12C7.7 12 7 11.3 7 10.5C7 9.7 7.7 9 8.5 9C9.3 9 10 9.7 10 10.5ZM17 10.5C17 11.3 16.3 12 15.5 12C14.7 12 14 11.3 14 10.5C14 9.7 14.7 9 15.5 9C16.3 9 17 9.7 17 10.5ZM19.5 15.5C17.8 17.2 15.4 18 13 18C10.6 18 8.2 17.2 6.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M19.5 9.5C18 7.6 15.6 6.5 13 6.5C10.4 6.5 8 7.6 6.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                    <p className="text-gray-600 italic pl-6">
+                    <p className="text-muted-foreground italic pl-6">
                       "The resume management system is a game-changer. I can easily organize, update, and track all my
                       candidates in one place."
-                    </p>
+                      </p>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <div className="rounded-full bg-gradient-to-br from-orange-400 to-pink-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">PP</div>
+                    <div className="rounded-full bg-gradient-to-br from-pink-400 to-orange-500 w-10 h-10 overflow-hidden flex items-center justify-center text-white font-medium">PP</div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Priya Patel</p>
-                      <p className="text-sm text-gray-500">Independent Recruiter</p>
-                    </div>
+                      <p className="text-sm font-medium text-foreground">Priya Patel</p>
+                      <p className="text-sm text-muted-foreground">Independent Recruiter</p>
+                      </div>
                     <div className="ml-auto flex">
                       {[1,2,3,4,5].map((star) => (
                         <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -501,51 +501,6 @@ function UnauthenticatedView() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-black via-gray-900 to-black text-white relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20">
-          <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-blue-500 to-transparent"></div>
-          <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-purple-500 to-transparent"></div>
-        </div>
-        <div className="container px-4 md:px-6 mx-auto relative z-10">
-          <div className="flex flex-col items-center justify-center space-y-6 text-center max-w-3xl mx-auto">
-            <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white mb-2">
-              Join Over 5,000+ Consultants Today
-            </div>
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-                Ready to Transform Your Recruitment Process?
-              </h2>
-              <p className="max-w-[800px] text-gray-300 md:text-xl/relaxed lg:text-xl/relaxed xl:text-xl/relaxed">
-                Join thousands of consultants who are matching talent with opportunity more efficiently than ever
-                before. Start your free trial today.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full max-w-md">
-              <Button asChild size="lg" className="bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/10">
-                <Link href="/sign-up" className="w-full sm:w-auto px-8 py-6 text-lg">Get Started Now</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild className="bg-white text-black hover:bg-gray-200 shadow-lg shadow-white/10">
-                <Link href="/support" className="w-full sm:w-auto px-8 py-6 text-lg">Contact Sales</Link>
-              </Button>
-            </div>
-            <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-black bg-gradient-to-br ${
-                    i === 1 ? 'from-blue-400 to-blue-600' : 
-                    i === 2 ? 'from-green-400 to-green-600' : 
-                    i === 3 ? 'from-yellow-400 to-yellow-600' : 
-                    'from-pink-400 to-pink-600'
-                  }`}></div>
-                ))}
-              </div>
-              <span className="text-sm text-gray-300">Trusted by consultants worldwide</span>
-            </div>
           </div>
         </div>
       </section>
@@ -604,21 +559,21 @@ function AuthenticatedView({ username }: { username: string }) {
   return (
     <>
       {/* Welcome Banner */}
-      <section className="w-full py-10 md:py-14 bg-gradient-to-r from-black to-gray-800 text-white">
+      <section className="w-full py-10 md:py-14 bg-primary text-primary-foreground">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl md:text-4xl font-bold">Welcome back, {username}</h1>
-              <p className="text-gray-300 mt-2 text-lg">Here's what's happening with your job seekers today.</p>
+              <p className="mt-2 text-lg opacity-90">Here's what's happening with your job seekers today.</p>
             </div>
             <div className="flex gap-3">
-              <Button asChild className="bg-white text-black hover:bg-gray-200">
+              <Button asChild className="bg-background text-foreground hover:bg-background/90">
                 <Link href="/dashboard">
                   <Upload className="mr-2 h-4 w-4" />
                   Go to Dashboard
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="bg-white text-black hover:bg-gray-200">
+              <Button asChild variant="outline" className="bg-background text-foreground hover:bg-background/90">
                 <Link href="/support">
                   <Search className="mr-2 h-4 w-4" />
                   Get Support
@@ -630,13 +585,13 @@ function AuthenticatedView({ username }: { username: string }) {
       </section>
 
       {/* Dashboard Overview */}
-      <section className="w-full py-10 bg-gray-50">
+      <section className="w-full py-10 bg-muted">
         <div className="container px-4 md:px-6 mx-auto">
           {/* Stats Cards */}
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Job Seekers</CardTitle>
+                <CardTitle className="text-sm font-medium">Job Seekers</CardTitle>
                 <Users className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
@@ -647,15 +602,15 @@ function AuthenticatedView({ username }: { username: string }) {
                   </div>
                 ) : (
                   <>
-                    <div className="text-3xl font-bold text-gray-900">{totalJobSeekers}</div>
-                    <p className="text-xs text-gray-500 mt-1">Candidates under your management</p>
+                    <div className="text-3xl font-bold">{totalJobSeekers}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Candidates under your management</p>
                   </>
                 )}
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Available Jobs</CardTitle>
+                <CardTitle className="text-sm font-medium">Available Jobs</CardTitle>
                 <Briefcase className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
@@ -666,15 +621,15 @@ function AuthenticatedView({ username }: { username: string }) {
                   </div>
                 ) : (
                   <>
-                    <div className="text-3xl font-bold text-gray-900">{totalJobs}</div>
-                    <p className="text-xs text-gray-500 mt-1">Currently in our database</p>
+                    <div className="text-3xl font-bold">{totalJobs}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Currently in our database</p>
                   </>
                 )}
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Potential Matches</CardTitle>
+                <CardTitle className="text-sm font-medium">Potential Matches</CardTitle>
                 <CheckCircle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
@@ -685,15 +640,15 @@ function AuthenticatedView({ username }: { username: string }) {
                   </div>
                 ) : (
                   <>
-                    <div className="text-3xl font-bold text-gray-900">{potentialMatches}</div>
-                    <p className="text-xs text-gray-500 mt-1">Based on skills and requirements</p>
+                    <div className="text-3xl font-bold">{potentialMatches}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Based on skills and requirements</p>
                   </>
                 )}
               </CardContent>
             </Card>
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Recent Activity</CardTitle>
+                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
                 <Clock className="h-4 w-4 text-purple-500" />
               </CardHeader>
               <CardContent>
@@ -704,8 +659,8 @@ function AuthenticatedView({ username }: { username: string }) {
                   </div>
                 ) : (
                   <>
-                    <div className="text-3xl font-bold text-gray-900">{recentActivities}</div>
-                    <p className="text-xs text-gray-500 mt-1">New activities in the last 24 hours</p>
+                    <div className="text-3xl font-bold">{recentActivities}</div>
+                    <p className="text-xs text-muted-foreground mt-1">New activities in the last 24 hours</p>
                   </>
                 )}
               </CardContent>
@@ -715,15 +670,15 @@ function AuthenticatedView({ username }: { username: string }) {
           {/* Job Seekers & Recent Jobs section */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             {/* Job Seekers Card */}
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl text-gray-900">Your Job Seekers</CardTitle>
-                  <Button variant="outline" size="sm" asChild className="text-gray-500 border-gray-200 hover:bg-gray-100">
+                  <CardTitle>Your Job Seekers</CardTitle>
+                  <Button variant="outline" size="sm" asChild>
                     <Link href="/dashboard">View All</Link>
                   </Button>
                 </div>
-                <CardDescription className="text-gray-500">
+                <CardDescription>
                   Manage and monitor your job seekers
                 </CardDescription>
               </CardHeader>
@@ -733,7 +688,7 @@ function AuthenticatedView({ username }: { username: string }) {
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : jobSeekersError ? (
-                  <div className="p-4 text-center text-red-500">Error loading job seekers.</div>
+                  <div className="p-4 text-center text-destructive">Error loading job seekers.</div>
                 ) : jobSeekers.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">No job seekers found.</div>
                 ) : (
@@ -741,19 +696,19 @@ function AuthenticatedView({ username }: { username: string }) {
                     {jobSeekers.slice(0, 3).map((jobSeeker) => (
                       <div
                         key={jobSeeker.id}
-                        className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors duration-150"
+                        className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors duration-150"
                       >
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
                           {jobSeeker.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{jobSeeker.name}</p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-sm font-medium truncate">{jobSeeker.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
                             {jobSeeker.skills?.slice(0, 3).join(", ") || 'No skills listed'}
                             {jobSeeker.skills?.length > 3 && "..."}
                           </p>
                         </div>
-                        <Button variant="ghost" size="sm" asChild className="text-gray-500 hover:text-gray-700">
+                        <Button variant="ghost" size="sm" asChild>
                           <Link href={`/job-seekers/${jobSeeker.id}`}>
                             <ArrowRight className="h-4 w-4" />
                           </Link>
@@ -774,10 +729,10 @@ function AuthenticatedView({ username }: { username: string }) {
             </Card>
 
             {/* Recent Jobs */}
-            <Card className="bg-white border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl text-gray-900">Recent Jobs</CardTitle>
-                <CardDescription className="text-gray-500">
+                <CardTitle>Recent Jobs</CardTitle>
+                <CardDescription>
                   Latest job opportunities matching your candidates' skills
                 </CardDescription>
               </CardHeader>
@@ -787,21 +742,21 @@ function AuthenticatedView({ username }: { username: string }) {
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : jobsError ? (
-                  <div className="p-4 text-center text-red-500">Error loading jobs.</div>
+                  <div className="p-4 text-center text-destructive">Error loading jobs.</div>
                 ) : jobs.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">No jobs found.</div>
                 ) : (
                   <div className="space-y-4">
                     {jobs.slice(0, 3).map((job) => (
-                      <div key={job.id} className="p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors duration-150">
+                      <div key={job.id} className="p-4 border border-border rounded-lg hover:border-accent transition-colors duration-150">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">{job.title}</h3>
-                            <p className="text-sm text-gray-500">
+                            <h3 className="font-medium">{job.title}</h3>
+                            <p className="text-sm text-muted-foreground">
                               {job.company} • {job.location}
                             </p>
                           </div>
-                          <div className="text-xs font-medium text-black bg-gray-100 px-2 py-1 rounded-full">
+                          <div className="text-xs font-medium bg-muted px-2 py-1 rounded-full">
                             {job.type || 'Full-time'}
                           </div>
                         </div>
@@ -810,23 +765,23 @@ function AuthenticatedView({ username }: { username: string }) {
                             {job.skills.slice(0, 4).map((skill) => (
                               <span 
                                 key={skill} 
-                                className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                                className="inline-block bg-muted text-foreground text-xs px-2 py-1 rounded-full mr-1 mb-1"
                               >
                                 {skill}
                               </span>
                             ))}
                             {job.skills.length > 4 && (
-                              <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                              <span className="inline-block bg-muted text-foreground text-xs px-2 py-1 rounded-full mr-1 mb-1">
                                 +{job.skills.length - 4} more
                               </span>
                             )}
                           </div>
                         )}
                         <div className="mt-3 flex justify-between items-center">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium">
                             {job.salary ? `$${job.salary.toLocaleString()}` : 'Salary not specified'}
                           </p>
-                          <Button size="sm" className="bg-black hover:bg-gray-900 text-white" asChild>
+                          <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
                             <Link href={`/jobs/${job.id}`}>
                               View Details
                             </Link>
@@ -851,15 +806,15 @@ function AuthenticatedView({ username }: { username: string }) {
       </section>
 
       {/* Quick Actions */}
-      <section className="w-full py-8 bg-white border-t border-gray-200">
+      <section className="w-full py-8 bg-background border-t border-border">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
+            <h2 className="text-xl font-semibold">Quick Actions</h2>
             <div className="flex flex-wrap gap-3">
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+                className="hover:bg-accent transition-all duration-200"
               >
                 <Link href="/job-seekers/add">
                   <Upload className="mr-2 h-4 w-4" />
@@ -869,7 +824,7 @@ function AuthenticatedView({ username }: { username: string }) {
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+                className="hover:bg-accent transition-all duration-200"
               >
                 <Link href="/jobs">
                   <Search className="mr-2 h-4 w-4" />
@@ -879,7 +834,7 @@ function AuthenticatedView({ username }: { username: string }) {
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-200 text-gray-900 hover:bg-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+                className="hover:bg-accent transition-all duration-200"
               >
                 <Link href="/support">
                   <FileText className="mr-2 h-4 w-4" />

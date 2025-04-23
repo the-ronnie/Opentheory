@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Users, 
@@ -12,7 +12,7 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Navbar } from "../../components/navbar";
@@ -243,7 +243,7 @@ function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       
       <div className="flex-1 space-y-6 container px-4 md:px-6 py-6 md:py-8 max-w-7xl mx-auto">

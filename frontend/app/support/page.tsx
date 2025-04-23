@@ -113,7 +113,7 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       
       {/* Hero Section with Search Bar */}

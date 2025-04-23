@@ -71,19 +71,19 @@ export default function PricingPage() {
       <header className="w-full py-4 border-b bg-background">
         <div className="container px-4 md:px-6">
           <Link href="/" className="flex items-center font-bold text-xl">
-            <div className="bg-black w-8 h-8 flex items-center justify-center rounded-full">
+            <div className="bg-primary w-8 h-8 flex items-center justify-center rounded-full">
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-white"
+                className="text-primary-foreground"
               >
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.2" />
               </svg>
             </div>
-            <span className="ml-2 text-lg font-semibold tracking-tight">OpenTheory</span>
+            <span className="ml-2 text-lg font-semibold tracking-tight text-foreground">OpenTheory</span>
           </Link>
         </div>
       </header>
@@ -128,8 +128,8 @@ export default function PricingPage() {
                   <ul className="space-y-3">
                     {pricingPlan.features.map((feature) => (
                       <li key={feature} className="flex items-center">
-                        <Check className="text-green-500 h-5 w-5 mr-3 shrink-0" />
-                        <span>{feature}</span>
+                        <Check className="text-primary h-5 w-5 mr-3 shrink-0" />
+                        <span className="text-foreground">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -177,9 +177,9 @@ export default function PricingPage() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform your consulting business?</h2>
             <p className="mx-auto max-w-[700px] mb-10 text-lg opacity-90">Join thousands of successful consultants who have streamlined their job placement process.</p>
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="lg"
-              className="bg-white hover:bg-white/90 text-primary hover:text-primary text-lg py-6 px-10" 
+              className="text-lg py-6 px-10" 
               onClick={handleSubscribe}
             >
               Get Started Today

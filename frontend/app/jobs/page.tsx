@@ -170,8 +170,8 @@ export default function JobsPage() {
     return (
       <>
         <Navbar />
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700"></div>
+        <div className="flex justify-center items-center min-h-screen bg-background">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </>
     );
@@ -181,27 +181,27 @@ export default function JobsPage() {
     return (
       <>
         <Navbar />
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-          <div className="bg-white p-10 rounded-lg shadow-md text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Error</h1>
-            <p className="text-gray-600">
+        <div className="flex justify-center items-center min-h-screen bg-background">
+          <div className="bg-card p-10 rounded-lg shadow-md text-center">
+            <h1 className="text-3xl font-bold text-foreground mb-4">Error</h1>
+            <p className="text-muted-foreground">
               {isJobSeekersError 
                 ? "Failed to load job seekers data" 
                 : "Failed to load jobs data"}
             </p>
-            <p className="mt-2 text-sm text-gray-700">
+            <p className="mt-2 text-sm text-muted-foreground">
               {isJobSeekersError 
                 ? jobSeekersError?.toString() 
                 : error?.toString()}
             </p>
             {!consultantId && (
-              <p className="mt-4 text-sm text-red-500">
+              <p className="mt-4 text-sm text-destructive">
                 Consultant ID not found. Please make sure you are logged in.
               </p>
             )}
             <button
               onClick={goToHomePage}
-              className="mt-6 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-black focus:outline-none"
+              className="mt-6 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none"
             >
               Return to Home
             </button>
@@ -223,13 +223,13 @@ export default function JobsPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Available Jobs</h1>
+            <h1 className="text-3xl font-bold text-foreground">Available Jobs</h1>
             <button
               onClick={goToHomePage}
-              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary flex items-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-9 9" />
@@ -239,18 +239,18 @@ export default function JobsPage() {
           </div>
           
           {/* Search and filter section */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Filter Jobs</h2>
+          <div className="bg-card p-6 rounded-lg shadow-md mb-8 border border-border">
+            <h2 className="text-lg font-medium text-foreground mb-4">Filter Jobs</h2>
             
             {/* Search tabs */}
-            <div className="border-b border-gray-200 mb-6">
+            <div className="border-b border-border mb-6">
               <div className="flex -mb-px space-x-6">
                 <button
                   onClick={() => setActiveTab('text')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm focus:outline-none ${
                     activeTab === 'text' 
-                      ? 'border-gray-800 text-gray-800' 
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary text-foreground' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   Text Search
@@ -259,8 +259,8 @@ export default function JobsPage() {
                   onClick={() => setActiveTab('jobseekers')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm focus:outline-none ${
                     activeTab === 'jobseekers' 
-                      ? 'border-gray-800 text-gray-800' 
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary text-foreground' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   Filter by Job Seekers
@@ -271,7 +271,7 @@ export default function JobsPage() {
             {/* Text search tab content */}
             {activeTab === 'text' && (
               <div className="mb-4">
-                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="searchTerm" className="block text-sm font-medium text-foreground mb-1">
                   Search by title, company, description or skills
                 </label>
                 <input
@@ -280,9 +280,9 @@ export default function JobsPage() {
                   value={searchTerm}
                   onChange={handleSearchTermChange}
                   placeholder="Search jobs... (use commas for multiple terms)"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-gray-500 focus:border-gray-500"
+                  className="w-full p-2 border border-border rounded-md bg-background text-foreground focus:ring-primary focus:border-primary"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Tip: Enter multiple search terms separated by commas (e.g., "javascript, remote, senior")
                 </p>
               </div>
@@ -292,16 +292,16 @@ export default function JobsPage() {
             {activeTab === 'jobseekers' && (
               <div className="mb-4">
                 <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                  <h3 className="text-sm font-medium text-foreground mb-3">
                     Select job seekers to find matching jobs based on their skills
                   </h3>
                   
                   {!jobSeekers || jobSeekers.length === 0 ? (
-                    <div className="p-6 border border-gray-200 rounded-lg text-center">
-                      <p className="text-gray-500 italic mb-2">No job seekers available for your account.</p>
+                    <div className="p-6 border border-border rounded-lg text-center">
+                      <p className="text-muted-foreground italic mb-2">No job seekers available for your account.</p>
                       <Link 
                         href="/job-seekers/add" 
-                        className="text-gray-700 underline hover:text-gray-900"
+                        className="text-foreground underline hover:text-primary"
                       >
                         Add a job seeker to get started
                       </Link>
@@ -313,8 +313,8 @@ export default function JobsPage() {
                           key={seeker.id} 
                           className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                             selectedJobSeekers.includes(seeker.id)
-                              ? 'border-gray-800 bg-gray-100'
-                              : 'border-gray-300 hover:border-gray-400'
+                              ? 'border-primary bg-accent'
+                              : 'border-border hover:border-primary'
                           }`}
                           onClick={(e) => {
                             // Only toggle if the click wasn't on the checkbox or its label
@@ -333,23 +333,23 @@ export default function JobsPage() {
                                 e.stopPropagation(); // Stop event from bubbling up
                                 handleJobSeekerSelect(seeker.id);
                               }}
-                              className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                              className="h-4 w-4 text-primary focus:ring-primary rounded"
                             />
-                            <label htmlFor={`seeker-${seeker.id}`} className="ml-2 font-medium text-gray-700">
+                            <label htmlFor={`seeker-${seeker.id}`} className="ml-2 font-medium text-foreground">
                               {seeker.name}
                             </label>
                           </div>
                           
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500">Skills:</p>
+                            <p className="text-xs text-muted-foreground">Skills:</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {seeker.skills.slice(0, 3).map((skill, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded-full">
+                                <span key={idx} className="px-2 py-0.5 bg-muted text-foreground text-xs rounded-full">
                                   {skill}
                                 </span>
                               ))}
                               {seeker.skills.length > 3 && (
-                                <span className="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded-full">
+                                <span className="px-2 py-0.5 bg-muted text-foreground text-xs rounded-full">
                                   +{seeker.skills.length - 3} more
                                 </span>
                               )}
@@ -365,11 +365,11 @@ export default function JobsPage() {
             
             {/* Selected skills display (common to both tabs) */}
             {selectedSkills.length > 0 && (
-              <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Filtering by skills:</h3>
+              <div className="mb-6 p-4 bg-muted border border-border rounded-lg">
+                <h3 className="text-sm font-medium text-foreground mb-2">Filtering by skills:</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedSkills.map((skill, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded-full">
+                    <span key={idx} className="px-3 py-1 bg-accent text-foreground text-xs rounded-full">
                       {skill}
                     </span>
                   ))}
@@ -382,7 +382,7 @@ export default function JobsPage() {
               <div className="flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   Clear All Filters
                 </button>
@@ -392,14 +392,14 @@ export default function JobsPage() {
           
           {/* Job results statistics */}
           <div className="flex justify-between items-center mb-6">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {totalFilteredCount > 0 
                 ? `Showing ${Math.min(page * pageSize + 1, totalFilteredCount)} - ${Math.min((page + 1) * pageSize, totalFilteredCount)} of ${totalFilteredCount} jobs`
                 : 'No jobs found'
               } 
             </p>
             {selectedSkills.length > 0 && (
-              <p className="text-sm">
+              <p className="text-sm text-foreground">
                 <span className="font-medium">{totalFilteredCount}</span> jobs match selected skills
               </p>
             )}
@@ -407,12 +407,12 @@ export default function JobsPage() {
           
           {/* Jobs listing */}
           {!displayedJobs || displayedJobs.length === 0 ? (
-            <div className="bg-white shadow rounded-lg p-10 text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-card shadow rounded-lg p-10 text-center border border-border">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h2 className="text-xl font-medium text-gray-700 mt-4">No matching jobs found</h2>
-              <p className="text-gray-500 mt-2">Try adjusting your search filters or selecting different job seekers.</p>
+              <h2 className="text-xl font-medium text-foreground mt-4">No matching jobs found</h2>
+              <p className="text-muted-foreground mt-2">Try adjusting your search filters or selecting different job seekers.</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -420,14 +420,14 @@ export default function JobsPage() {
                 <JobCard key={job.id} job={job} />
               ))}
               {/* Pagination */}
-              <div className="flex justify-between items-center mt-8 bg-white p-4 rounded-lg shadow">
+              <div className="flex justify-between items-center mt-8 bg-card p-4 rounded-lg shadow border border-border">
                 <button 
                   onClick={handlePrevPage}
                   disabled={page === 0}
                   className={`px-4 py-2 rounded-md ${
                     page === 0 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-gray-800 text-white hover:bg-black'
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
                 >
                   Previous
@@ -453,8 +453,8 @@ export default function JobsPage() {
                         onClick={() => setPage(pageNum)}
                         className={`w-10 h-10 flex items-center justify-center rounded-md ${
                           page === pageNum
-                            ? 'bg-gray-800 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-foreground hover:bg-accent'
                         }`}
                       >
                         {pageNum + 1}
@@ -463,7 +463,7 @@ export default function JobsPage() {
                   })}
                 </div>
                 
-                <span className="md:hidden py-2 px-4">
+                <span className="md:hidden py-2 px-4 text-foreground">
                   Page {page + 1} of {totalPages}
                 </span>
                 
@@ -472,8 +472,8 @@ export default function JobsPage() {
                   disabled={page >= totalPages - 1}
                   className={`px-4 py-2 rounded-md ${
                     page >= totalPages - 1 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-gray-800 text-white hover:bg-black'
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
                 >
                   Next
@@ -503,57 +503,57 @@ function JobCard({ job }: { job: Job }) {
   };
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg hover:shadow-md transition-shadow">
+    <div className="bg-card shadow overflow-hidden sm:rounded-lg hover:shadow-md transition-shadow border border-border">
       <div className="px-4 py-5 sm:px-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <h3 className="text-xl font-semibold text-foreground">{job.title}</h3>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               {job.company} • {job.location}
             </p>
           </div>
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium 
-            ${job.status === 'active' ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-800'}`}>
+            ${job.status === 'active' ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'}`}>
             {job.status === 'active' ? 'Active' : 'Closed'}
           </span>
         </div>
       </div>
 
-      <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+      <div className="border-t border-border px-4 py-5 sm:px-6">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Description</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dt className="text-sm font-medium text-muted-foreground">Description</dt>
+            <dd className="mt-1 text-sm text-foreground">
               {truncateDescription(job.description)}
             </dd>
           </div>
 
           <div>
-            <dt className="text-sm font-medium text-gray-500">Type</dt>
-            <dd className="mt-1 text-sm text-gray-900">{job.type}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">Type</dt>
+            <dd className="mt-1 text-sm text-foreground">{job.type}</dd>
           </div>
 
           <div>
-            <dt className="text-sm font-medium text-gray-500">Salary</dt>
-            <dd className="mt-1 text-sm text-gray-900">${job.salary.toLocaleString()}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">Salary</dt>
+            <dd className="mt-1 text-sm text-foreground">${job.salary.toLocaleString()}</dd>
           </div>
 
           <div>
-            <dt className="text-sm font-medium text-gray-500">Posted On</dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatDate(job.postedDate)}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">Posted On</dt>
+            <dd className="mt-1 text-sm text-foreground">{formatDate(job.postedDate)}</dd>
           </div>
 
           <div>
-            <dt className="text-sm font-medium text-gray-500">Application Deadline</dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatDate(job.deadline)}</dd>
+            <dt className="text-sm font-medium text-muted-foreground">Application Deadline</dt>
+            <dd className="mt-1 text-sm text-foreground">{formatDate(job.deadline)}</dd>
           </div>
 
           <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Required Skills</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dt className="text-sm font-medium text-muted-foreground">Required Skills</dt>
+            <dd className="mt-1 text-sm text-foreground">
               <div className="flex flex-wrap gap-2">
                 {job.skills.map((skill, index) => (
-                  <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
+                  <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent text-foreground">
                     {skill}
                   </span>
                 ))}
@@ -565,7 +565,7 @@ function JobCard({ job }: { job: Job }) {
         <div className="mt-6">
           <Link
             href={`/jobs/${job.id}`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-800 hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
           >
             View Details
           </Link>
