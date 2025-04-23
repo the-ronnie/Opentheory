@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
-import Navbar from "@/components/navbar";
+import Navbar from "../../../components/navbar";
 import { Alert, AlertDescription, AlertTitle } from "../../../components/ui/alert";
 import { useCreateJobSeekerMutation } from "../../../apiSlice/jobSeekersApiSlice";
 import { useUser } from '../../../components/auth/UserProvider';
@@ -321,7 +321,7 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
   // Handle file drop
  // Handle file drop
  // Update the handleDrop function to use the same API URL:
- const handleDrop = async async (e: React.DragEvent<HTMLDivElement>) => {
+ const handleDrop =  async (e: React.DragEvent<HTMLDivElement>) => {
   e.preventDefault();
   setIsDragging(false);
 

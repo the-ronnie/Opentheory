@@ -558,22 +558,22 @@ function AuthenticatedView({ username }: { username: string }) {
 
   return (
     <>
-      {/* Welcome Banner */}
-      <section className="w-full py-10 md:py-14 bg-primary text-primary-foreground">
+      {/* Welcome Banner - Updated for dark mode */}
+      <section className="w-full py-10 md:py-14 bg-gradient-to-r from-primary to-primary/90 dark:from-primary/90 dark:to-primary/70 border-b border-border">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl md:text-4xl font-bold">Welcome back, {username}</h1>
-              <p className="mt-2 text-lg opacity-90">Here's what's happening with your job seekers today.</p>
+              <h1 className="text-2xl md:text-4xl font-bold text-primary-foreground">Welcome back, {username}</h1>
+              <h1 className="mt-2 text-lg text-primary-foreground">Here's what's happening with your job seekers today.</h1>
             </div>
             <div className="flex gap-3">
-              <Button asChild className="bg-background text-foreground hover:bg-background/90">
+              <Button asChild className="bg-background/90 text-foreground hover:bg-background shadow-sm backdrop-blur-sm">
                 <Link href="/dashboard">
                   <Upload className="mr-2 h-4 w-4" />
                   Go to Dashboard
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="bg-background text-foreground hover:bg-background/90">
+              <Button asChild variant="secondary" className="hover:bg-accent shadow-sm backdrop-blur-sm">
                 <Link href="/support">
                   <Search className="mr-2 h-4 w-4" />
                   Get Support
