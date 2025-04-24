@@ -6,41 +6,53 @@ import { Check, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from '../../components/auth/UserProvider';
+import {loadStripe} from '@stripe/stripe-js';
+
 
 export default function PricingPage() {
   const router = useRouter();
   const { user } = useUser();
   
-  // Single pricing plan at $49
-  const pricingPlan = {
-    name: "Professional",
-    description: "Complete solution for consultants managing job seekers",
-    price: 49,
-    features: [
-      "Unlimited job seekers",
-      "Advanced job matching",
-      "Priority support",
-      "Resume parsing & optimization",
-      "Advanced job search filters",
-      "Comprehensive analytics",
-      "Email notifications",
-      "Custom consultant branding",
-      "Premium job listings",
-      "API access",
-      "Dedicated account manager"
-    ],
-    buttonText: "Subscribe Now"
-  };
+  // Common features for both plans
+  const features = [
+    "Unlimited job seekers",
+    "Advanced job matching",
+    "Priority support",
+    "Resume parsing & optimization",
+    "Advanced job search filters",
+    "Comprehensive analytics",
+    "Email notifications",
+    "Custom consultant branding",
+    "Premium job listings",
+    "API access",
+    "Dedicated account manager"
+  ];
+
+  // Pricing plans
+  const pricingPlans = [
+    {
+      name: "Monthly",
+      description: "Full access with monthly billing",
+      price: 49,
+      period: "month",
+      buttonText: "Subscribe Monthly"
+    },
+    {
+      name: "Yearly",
+      description: "Full access with yearly billing",
+      price: 499,
+      period: "year",
+      savings: "Save $89 (15%)",
+      isPopular: true,
+      buttonText: "Subscribe Yearly"
+    }
+  ];
 
   // FAQ items
   const faqItems = [
     {
       question: "What's included in the subscription?",
       answer: "Our all-inclusive subscription provides unlimited job seeker management, advanced matching algorithms, priority support, and all premium features necessary for successful job placement."
-    },
-    {
-      question: "Do you offer a free trial?",
-      answer: "Yes, we offer a 14-day free trial so you can explore all features before committing."
     },
     {
       question: "What payment methods do you accept?",
@@ -51,15 +63,45 @@ export default function PricingPage() {
       answer: "Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period."
     },
     {
-      question: "Can I get a refund if I'm not satisfied?",
-      answer: "We offer a 30-day money-back guarantee for all new subscriptions. If you're not completely satisfied, contact our support team for a full refund."
+      question: "Can I switch between monthly and yearly plans?",
+      answer: "Yes, you can switch between plans at any time. When upgrading to yearly, you'll be billed the new amount. When downgrading to monthly, the change will take effect at the end of your current billing cycle."
+    },
+    {
+      question: "Do you offer pricing for teams?",
+      answer: "Both our monthly and yearly plans include unlimited users. Contact our sales team for custom enterprise solutions."
     }
   ];
   
   // Handle subscribe button click - redirect to home if logged in, signup if not
-  const handleSubscribe = () => {
+  const handleSubscribe = async(plan) => {
     if (user) {
-      router.push('/');
+      console.log(`User is logged in, redirecting to checkout for plan: ${plan}`);
+      const stripe = await loadStripe('pk_test_51POcPpB6ZXOtxLnUAjgY5b8o3td1EHif1VFeqbG6QSR8T5l98V5VQsvAFMTFWget39YPOyc4cMHHlExM86C2A3fM002fltQKKS');
+
+      const body = {
+        priceId: plan,
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+      }
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+      const response = await fetch('http://localhost:5000/api/checkout', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const session = await response.json();
+      const result = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+      if (result.error) {
+        console.error(result.error.message);
+      }
+
     } else {
       router.push('/sign-up');
     }
@@ -97,48 +139,65 @@ export default function PricingPage() {
                 Simple, Transparent Pricing
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-lg md:text-xl">
-                One plan, all features included. Everything you need to succeed.
+                Two simple options, full access. Choose what works best for you.
               </p>
             </div>
 
-            {/* Single Pricing Card - Center Aligned */}
-            <div className="flex justify-center">
-              <div className="w-full max-w-md rounded-xl border-2 border-primary p-8 shadow-xl bg-card">
-                <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold">{pricingPlan.name}</h3>
-                  <p className="text-muted-foreground">{pricingPlan.description}</p>
+            {/* Pricing Cards */}
+            <div className="flex flex-col md:flex-row justify-center gap-8">
+              {pricingPlans.map((plan, index) => (
+                <div 
+                  key={index} 
+                  className={`w-full max-w-md rounded-xl ${plan.isPopular ? 'border-2 border-primary' : 'border'} p-8 shadow-lg bg-card relative`}
+                >
+                  {plan.isPopular && (
+                    <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2">
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                        BEST VALUE
+                      </span>
+                    </div>
+                  )}
                   
-                  <div className="flex items-baseline justify-center mt-6">
-                    <span className="text-6xl font-bold">${pricingPlan.price}</span>
-                    <span className="ml-1 text-muted-foreground">/month</span>
+                  <div className="text-center space-y-4">
+                    <h3 className="text-2xl font-bold">{plan.name}</h3>
+                    <p className="text-muted-foreground">{plan.description}</p>
+                    
+                    <div className="flex items-baseline justify-center mt-6">
+                      <span className="text-5xl font-bold">${plan.price}</span>
+                      <span className="ml-1 text-muted-foreground">/{plan.period}</span>
+                    </div>
+                    
+                    {plan.savings && (
+                      <p className="text-sm font-medium text-primary">{plan.savings}</p>
+                    )}
+                    
+                    <Button
+                      variant={plan.isPopular ? "default" : "outline"}
+                      size="lg"
+                      className="w-full text-lg py-6 mt-4"
+                      onClick={() => handleSubscribe(plan.name.toLowerCase())}
+                    >
+                      {plan.buttonText}
+                    </Button>
                   </div>
                   
-                  <Button
-                    variant="default"
-                    size="lg"
-                    className="w-full text-lg py-6 mt-4"
-                    onClick={handleSubscribe}
-                  >
-                    {pricingPlan.buttonText}
-                  </Button>
+                  <div className="mt-8 space-y-4">
+                    <h4 className="text-center font-medium">Full Access Includes:</h4>
+                    <ul className="space-y-3">
+                      {features.map((feature) => (
+                        <li key={feature} className="flex items-center">
+                          <Check className="text-primary h-5 w-5 mr-3 shrink-0" />
+                          <span className="text-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                
-                <div className="mt-8 space-y-4">
-                  <h4 className="text-center font-medium">Everything you need:</h4>
-                  <ul className="space-y-3">
-                    {pricingPlan.features.map((feature) => (
-                      <li key={feature} className="flex items-center">
-                        <Check className="text-primary h-5 w-5 mr-3 shrink-0" />
-                        <span className="text-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              ))}
             </div>
             
             <p className="text-sm text-muted-foreground mt-8">
-              All subscriptions include unlimited updates and premium support
+              All subscriptions include unlimited updates and premium support. No free trials offered.
             </p>
           </div>
         </section>
@@ -180,7 +239,7 @@ export default function PricingPage() {
               variant="secondary" 
               size="lg"
               className="text-lg py-6 px-10" 
-              onClick={handleSubscribe}
+              onClick={() => handleSubscribe('yearly')}
             >
               Get Started Today
             </Button>

@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
   res.send('API is working!');
 });
 
-router.use('/stripe', stripeRouter);
+router.use('/checkout', stripeRouter);
 router.use('/users', userRouter);
 router.use('/job-seekers', jobSeekerRouter);
 router.use('/jobs', jobRouter);
