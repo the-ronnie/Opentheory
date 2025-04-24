@@ -1,17 +1,68 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Check, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from '../../components/auth/UserProvider';
-import {loadStripe} from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { 
+  useCreateCheckoutSessionMutation, 
+  useUpdateSessionIdMutation,
+  useCheckPaymentStatusMutation
+} from '../../apiSlice/stripeApiSlice';
+import { useGetCurrentUserQuery } from '../../apiSlice/userApiSlice';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute'; // Add this import
 
+export default function PricingPageLayout() {
+  return (
+    <ProtectedRoute bypassPaymentCheck={true}>
+      <PricingPage />
+    </ProtectedRoute>
+  );
+}
 
-export default function PricingPage() {
+function PricingPage() {
   const router = useRouter();
   const { user } = useUser();
+  const [createCheckoutSession, { isLoading }] = useCreateCheckoutSessionMutation();
+  const [updateSessionId] = useUpdateSessionIdMutation();
+  const [checkPaymentStatus] = useCheckPaymentStatusMutation();
+  const { refetch } = useGetCurrentUserQuery();
+  
+  // Check for payment status when the page loads
+  useEffect(() => {
+    const verifyPayment = async () => {
+      if (user?.id) {
+        try {
+          const result = await checkPaymentStatus({ userId: user.id }).unwrap();
+          console.log('Payment status check result:', result);
+          
+          // If the payment was processed and user status updated, refresh user data
+          if (result.success) {
+            // Handle paid status
+            if (result.isPaid) {
+              await refetch();
+              console.log('Payment successful, redirecting to dashboard');
+              router.push('/dashboard');
+            } 
+            // If subscription exists but has expired, show an appropriate message
+            else if (result.expiryDate) {
+              await refetch();
+              // Stay on pricing page but let the user know subscription expired
+              console.log('Subscription expired, showing renewal options');
+              // You could set some state here to show a renewal message
+            }
+          }
+        } catch (error) {
+          console.error('Error checking payment status:', error);
+        }
+      }
+    };
+    
+    verifyPayment();
+  }, [user?.id, checkPaymentStatus, refetch, router]);
   
   // Common features for both plans
   const features = [
@@ -75,33 +126,43 @@ export default function PricingPage() {
   // Handle subscribe button click - redirect to home if logged in, signup if not
   const handleSubscribe = async(plan) => {
     if (user) {
-      console.log(`User is logged in, redirecting to checkout for plan: ${plan}`);
-      const stripe = await loadStripe('pk_test_51POcPpB6ZXOtxLnUAjgY5b8o3td1EHif1VFeqbG6QSR8T5l98V5VQsvAFMTFWget39YPOyc4cMHHlExM86C2A3fM002fltQKKS');
-
-      const body = {
-        priceId: plan,
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        phone: user.phone,
+      try {
+        console.log(`User is logged in, redirecting to checkout for plan: ${plan}`);
+        const stripe = await loadStripe('pk_test_51POcPpB6ZXOtxLnUAjgY5b8o3td1EHif1VFeqbG6QSR8T5l98V5VQsvAFMTFWget39YPOyc4cMHHlExM86C2A3fM002fltQKKS');
+        
+        // Use our API slice instead of direct fetch
+        const response = await createCheckoutSession({
+          priceId: plan,
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+        }).unwrap();
+        
+        // Save session ID to user database record
+        if (response?.id) {
+          try {
+            await updateSessionId({
+              userId: user.id,
+              sessionId: response.id
+            }).unwrap();
+            console.log('Session ID saved to user record');
+          } catch (error) {
+            console.error('Failed to update session ID in database:', error);
+          }
+          
+          // Redirect to checkout using the session ID
+          const result = await stripe.redirectToCheckout({
+            sessionId: response.id,
+          });
+          
+          if (result.error) {
+            console.error(result.error.message);
+          }
+        }
+      } catch (error) {
+        console.error('Error creating checkout session:', error);
       }
-      const headers = {
-        'Content-Type': 'application/json',
-      }
-      const response = await fetch('http://localhost:5000/api/checkout', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      const session = await response.json();
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-      if (result.error) {
-        console.error(result.error.message);
-      }
-
     } else {
       router.push('/sign-up');
     }

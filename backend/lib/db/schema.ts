@@ -18,6 +18,10 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   role: varchar('role', { length: 20 }).notNull().default('member'),
   
+  // Session management fields
+  sessionId: text('session_id'),
+  expiryDate: timestamp('expiry_date'),
+  
   // Consultant-specific fields ( all users are consultants)
   isPaid: boolean('is_paid').default(false), // Flag for paid users/consultants
   phone: varchar('phone', { length: 20 }).unique(),

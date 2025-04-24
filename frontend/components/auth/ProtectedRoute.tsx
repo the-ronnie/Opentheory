@@ -11,12 +11,14 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: string;
   allowUnauthenticated?: boolean;
+  bypassPaymentCheck?: boolean; // Add this to allow certain pages without payment
 }
 
 export function ProtectedRoute({ 
   children, 
   requiredRole,
-  allowUnauthenticated = false 
+  allowUnauthenticated = false,
+  bypassPaymentCheck = false // For pricing page, auth pages, etc.
 }: ProtectedRouteProps) {
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
@@ -51,6 +53,38 @@ export function ProtectedRoute({
       return;
     } 
     
+    // Check payment status for regular users (not admins) if not bypassing payment check
+    // This applies to members who need to be paid to access most features
+    if (
+      user && 
+      user.role === 'member' && 
+      !bypassPaymentCheck &&
+      pathname !== '/pricing' && 
+      !pathname.startsWith('/sign-') && 
+      !pathname.startsWith('/auth/')
+    ) {
+      // Check if the user is not paid
+      if (!user.isPaid) {
+        redirected.current = true;
+        console.log('User is not paid, redirecting to pricing page');
+        router.push('/pricing');
+        return;
+      }
+      
+      // Check if the subscription has expired
+      if (user.expiryDate) {
+        const expiryDate = new Date(user.expiryDate);
+        const now = new Date();
+        
+        if (expiryDate < now) {
+          redirected.current = true;
+          console.log('Subscription expired, redirecting to pricing page');
+          router.push('/pricing');
+          return;
+        }
+      }
+    }
+    
     // Handle role-specific access
     if (user && requiredRole && user.role !== requiredRole) {
       redirected.current = true;
@@ -62,7 +96,7 @@ export function ProtectedRoute({
       }
       return;
     }
-  }, [isLoading, isApiLoading, user, apiUser, apiError, router, requiredRole, setUser, allowUnauthenticated, pathname]);
+  }, [isLoading, isApiLoading, user, apiUser, apiError, router, requiredRole, setUser, allowUnauthenticated, pathname, bypassPaymentCheck]);
 
   // While loading, show spinner
   if (isLoading || isApiLoading) {
@@ -83,6 +117,30 @@ export function ProtectedRoute({
     // Admin users can only access admin pages
     if (user?.role === "admin" && pathname !== "/admin" && !pathname.startsWith("/admin/")) {
       return null;
+    }
+    
+    // Check payment status for regular users if not bypassing payment check
+    if (
+      user && 
+      user.role === 'member' && 
+      !bypassPaymentCheck &&
+      pathname !== '/pricing' && 
+      !pathname.startsWith('/sign-') && 
+      !pathname.startsWith('/auth/')
+    ) {
+      // If user is not paid or subscription expired, don't render children
+      if (!user.isPaid) {
+        return null;
+      }
+      
+      if (user.expiryDate) {
+        const expiryDate = new Date(user.expiryDate);
+        const now = new Date();
+        
+        if (expiryDate < now) {
+          return null;
+        }
+      }
     }
     
     return <>{children}</>;

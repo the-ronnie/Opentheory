@@ -7,6 +7,7 @@ export type User = {
   email: string;
   role: 'admin' | 'member'; // Only two roles: admin or member
   isPaid: boolean;
+  expiryDate?: string | null; // Added expiryDate field
   phone?: string | null;
   avatar?: string | null;
   bio?: string | null;
@@ -24,6 +25,7 @@ export type UserListing = {
   email: string;
   role: 'admin' | 'member';
   isPaid: boolean;
+  expiryDate?: string | null; // Added expiryDate field
 };
 
 // Consultant type - just an alias for User with 'member' role
@@ -76,6 +78,7 @@ export type ActivityLog = {
 // Type for payment status update
 export type PaymentStatusUpdate = {
   isPaid: boolean;
+  expiryDate?: string | null;
 };
 
 export const usersApiSlice = baseApiSlice.injectEndpoints({

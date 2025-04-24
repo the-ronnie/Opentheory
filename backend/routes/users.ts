@@ -97,6 +97,7 @@ router.post('/register', async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       isPaid: user.isPaid,
+      expiryDate: user.expiryDate,
       phone: user.phone,
       bio: user.bio,
       company: user.company,
@@ -143,7 +144,8 @@ router.post('/login', async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      isPaid: user.isPaid
+      isPaid: user.isPaid,
+      expiryDate: user.expiryDate
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -179,6 +181,7 @@ router.get('/consultants', async (req: Request, res: Response) => {
       email: users.email,
       role: users.role,
       isPaid: users.isPaid,
+      expiryDate: users.expiryDate,
       phone: users.phone,
       avatar: users.avatar,
       bio: users.bio,
@@ -216,6 +219,7 @@ router.get('/consultants/:id', async (req: Request, res: Response) => {
       email: users.email,
       role: users.role,
       isPaid: users.isPaid,
+      expiryDate: users.expiryDate,
       phone: users.phone,
       avatar: users.avatar,
       bio: users.bio,
@@ -257,6 +261,7 @@ router.get('/me', (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       isPaid: user.isPaid,
+      expiryDate: user.expiryDate,
       phone: user.phone,
       avatar: user.avatar,
       bio: user.bio,
@@ -315,6 +320,7 @@ router.put('/me', async (req: Request, res: Response) => {
       email: updatedUser.email,
       role: updatedUser.role,
       isPaid: updatedUser.isPaid,
+      expiryDate: updatedUser.expiryDate,
       phone: updatedUser.phone,
       avatar: updatedUser.avatar,
       bio: updatedUser.bio,
@@ -406,7 +412,7 @@ router.patch('/payment-status/:id', hasRole('admin'), async (req: Request, res: 
       return res.status(400).json({ error: 'Invalid user ID' });
     }
     
-    const { isPaid } = req.body;
+    const { isPaid, expiryDate } = req.body;
     if (typeof isPaid !== 'boolean') {
       return res.status(400).json({ error: 'isPaid must be a boolean value' });
     }
@@ -421,6 +427,7 @@ router.patch('/payment-status/:id', hasRole('admin'), async (req: Request, res: 
       .update(users)
       .set({
         isPaid,
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
@@ -431,7 +438,8 @@ router.patch('/payment-status/:id', hasRole('admin'), async (req: Request, res: 
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      isPaid: updatedUser.isPaid
+      isPaid: updatedUser.isPaid,
+      expiryDate: updatedUser.expiryDate
     });
   } catch (error) {
     console.error('Update payment status error:', error);
@@ -487,6 +495,7 @@ router.get('/', hasRole('admin'), async (req: Request, res: Response) => {
       email: users.email,
       role: users.role,
       isPaid: users.isPaid,
+      expiryDate: users.expiryDate,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt
     })

@@ -303,6 +303,34 @@ function ProfilePage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>Joined {formatDate(currentUser?.createdAt)}</span>
                 </div>
+                
+                {/* Subscription Status */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <h4 className="font-medium mb-2">Subscription Status</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-flex h-2 w-2 rounded-full ${currentUser?.isPaid ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    <span className="font-medium">{currentUser?.isPaid ? 'Active' : 'Inactive'}</span>
+                  </div>
+                  
+                  {currentUser?.isPaid && currentUser?.expiryDate && (
+                    <div className="mt-2">
+                      <span className="text-sm text-muted-foreground">
+                        Expires on {formatDate(currentUser.expiryDate)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {(!currentUser?.isPaid || !currentUser?.expiryDate) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2" 
+                      asChild
+                    >
+                      <Link href="/pricing">Upgrade Plan</Link>
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
             {isEditMode && (
