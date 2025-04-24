@@ -5,26 +5,16 @@ import { useUser } from '../../components/auth/UserProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { 
-  BriefcaseIcon, BookmarkIcon, UsersIcon, BellIcon, Loader2, 
-  BarChart3Icon, TrendingUpIcon, ArrowRightIcon,
-  CheckCircleIcon, XCircleIcon, ClockIcon, HomeIcon
+  BriefcaseIcon, BookmarkIcon, UsersIcon, 
+  Loader2, BarChart3Icon, TrendingUpIcon, 
+  ArrowRightIcon, CheckCircleIcon, ClockIcon, HomeIcon
 } from 'lucide-react';
 import Link from 'next/link';
-import { useGetUserActivitiesQuery } from '../../apiSlice/userApiSlice';
 import { useGetAllActiveJobsQuery } from '../../apiSlice/jobsApiSlice';
-import { useGetRecentActivitiesQuery } from '../../apiSlice/activitiesApiSlice';
 import { useGetJobSeekersForConsultantQuery } from '../../apiSlice/jobSeekersApiSlice';
 import { Badge } from '../../components/ui/badge';
 import { Navbar } from '../../components/navbar';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
-
-interface DashboardActivityLog {
-  connections: { total: number; new: number };
-  notifications: { total: number; unread: number };
-  recommendations?: Array<{ id?: string; title: string; company: string; locationType: string; status: string }>;
-  applications?: { active: number; new: number; rejected: number; accepted: number };
-  savedJobs?: { total: number; new: number };
-}
 
 export default function DashboardPage() {
   return (
@@ -38,17 +28,8 @@ function DashboardContent() {
   const { user } = useUser();
   const [activeSection, setActiveSection] = useState('overview');
   
-  const { data: userActivities, isLoading: isLoadingActivities } = 
-    useGetUserActivitiesQuery({ userId: user?.id || 0 }) as { 
-      data: DashboardActivityLog | undefined; 
-      isLoading: boolean; 
-    };
-  
   const { data: recentJobs, isLoading: isLoadingJobs } = 
     useGetAllActiveJobsQuery({ limit: 5 });
-    
-  const { data: recentActivities, isLoading: isLoadingRecentActivities } = 
-    useGetRecentActivitiesQuery({ limit: 10 });
 
   const { data: jobSeekers, isLoading: isLoadingJobSeekers } = 
     useGetJobSeekersForConsultantQuery({
@@ -68,14 +49,10 @@ function DashboardContent() {
     newJobSeekers: 0, // This would come from an API with "recent" filter
     placedJobSeekers: 0, // This would be tracked in the JobSeeker status
     availableJobs: recentJobs?.length || 0,
-    savedJobs: userActivities?.savedJobs?.total || 0,
-    newSavedJobs: userActivities?.savedJobs?.new || 0,
-    notifications: userActivities?.notifications?.total || 0,
-    unreadNotifications: userActivities?.notifications?.unread || 0,
   };
 
   // Loading state for the entire dashboard
-  const isLoading = isLoadingActivities || isLoadingJobs || isLoadingRecentActivities || isLoadingJobSeekers;
+  const isLoading = isLoadingJobs || isLoadingJobSeekers;
 
   // Calculate match percentage between job seeker skills and job requirements
   const calculateMatchPercentage = (jobSeekerSkills: string[], jobSkills: string[]) => {
@@ -166,15 +143,15 @@ function DashboardContent() {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="container mx-auto px-4 py-6 space-y-8">
-        {/* Welcome Header with Notification Summary */}
+        {/* Welcome Header with Summary */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               {greeting}, {user?.name || 'there'}!
             </h1>
             <p className="text-muted-foreground">
-              <span className="font-medium">Activity Summary:</span> {stats.unreadNotifications} unread notifications, 
-              {stats.activeJobSeekers > 0 ? ` managing ${stats.activeJobSeekers} job seekers, ` : ' '}
+              <span className="font-medium">Summary:</span>
+              {stats.activeJobSeekers > 0 ? ` Managing ${stats.activeJobSeekers} job seekers, ` : ' '}
               {stats.availableJobs > 0 ? `${stats.availableJobs} active jobs available` : 'No active jobs available'}
             </p>
           </div>
@@ -183,9 +160,6 @@ function DashboardContent() {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-                {stats.unreadNotifications > 0 && (
-                  <Badge variant="destructive" className="ml-2">{stats.unreadNotifications}</Badge>
-                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -198,13 +172,6 @@ function DashboardContent() {
                 <Link href="/jobs/search">
                   <Button variant="outline" size="sm" className="w-full justify-between">
                     Search Jobs <ArrowRightIcon className="h-3 w-3" />
-                  </Button>
-                </Link>
-                <Link href="/activities">
-                  <Button variant="outline" size="sm" className="w-full justify-between">
-                    View Activities {stats.unreadNotifications > 0 && (
-                      <Badge variant="destructive" className="ml-1">{stats.unreadNotifications}</Badge>
-                    )}
                   </Button>
                 </Link>
               </div>
@@ -239,19 +206,6 @@ function DashboardContent() {
             Job Matching
           </Button>
           <Button 
-            variant={activeSection === 'activities' ? "default" : "outline"} 
-            onClick={() => setActiveSection('activities')}
-            className="rounded-md relative"
-          >
-            <BellIcon className="h-4 w-4 mr-2" />
-            Activities
-            {stats.unreadNotifications > 0 && (
-              <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                {stats.unreadNotifications > 9 ? '9+' : stats.unreadNotifications}
-              </span>
-            )}
-          </Button>
-          <Button 
             variant={activeSection === 'settings' ? "default" : "outline"} 
             onClick={() => setActiveSection('settings')}
             className="rounded-md"
@@ -266,7 +220,7 @@ function DashboardContent() {
           {activeSection === 'overview' && (
             <div className="space-y-6">
               {/* Stats Cards */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Job Seekers</CardTitle>
@@ -289,22 +243,12 @@ function DashboardContent() {
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Saved Jobs</CardTitle>
-                    <BookmarkIcon className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Matching</CardTitle>
+                    <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.savedJobs}</div>
-                    <p className="text-xs text-muted-foreground">{stats.newSavedJobs} new potential matches</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Activities</CardTitle>
-                    <BellIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.notifications}</div>
-                    <p className="text-xs text-muted-foreground">{stats.unreadNotifications} requires your attention</p>
+                    <div className="text-2xl font-bold">{stats.potentialMatches}</div>
+                    <p className="text-xs text-muted-foreground">Potential job seeker matches</p>
                   </CardContent>
                 </Card>
               </div>
@@ -591,78 +535,6 @@ function DashboardContent() {
             </Card>
           )}
           
-          {/* Activities Section */}
-          {activeSection === 'activities' && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Activity Log</CardTitle>
-                  <CardDescription>Recent activities and changes</CardDescription>
-                </div>
-                {stats.unreadNotifications > 0 && (
-                  <Badge>{stats.unreadNotifications} unread</Badge>
-                )}
-              </CardHeader>
-              <CardContent>
-                {recentActivities && recentActivities.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentActivities.map((activity, index) => (
-                      <div key={activity.id || index} className="flex gap-4 items-start pb-4 last:pb-0 border-b last:border-0">
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                          {activity.entityType === 'job' ? (
-                            <BriefcaseIcon className="h-4 w-4 text-blue-600" />
-                          ) : activity.entityType === 'jobseeker' ? (
-                            <UsersIcon className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <BellIcon className="h-4 w-4 text-purple-600" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm">{activity.details || `Action: ${activity.action}`}</p>
-                          <div className="flex justify-between items-center mt-1">
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(activity.timestamp).toLocaleDateString()} at {new Date(activity.timestamp).toLocaleTimeString()}
-                            </p>
-                            {activity.entityType === 'job' ? (
-                              <Link href={`/jobs/${activity.entityId}`}>
-                                <Badge variant="outline" className="text-xs hover:bg-blue-50 cursor-pointer">
-                                  View Job
-                                </Badge>
-                              </Link>
-                            ) : activity.entityType === 'jobseeker' ? (
-                              <Link href={`/job-seekers/${activity.entityId}`}>
-                                <Badge variant="outline" className="text-xs hover:bg-green-50 cursor-pointer">
-                                  View Job Seeker
-                                </Badge>
-                              </Link>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                {activity.entityType}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No recent activities found</p>
-                    <p className="text-sm mt-2">Activities will appear here as you manage job seekers and jobs</p>
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Link href="/job-seekers">
-                  <Button variant="outline">Manage Job Seekers</Button>
-                </Link>
-                <Link href="/jobs">
-                  <Button>Browse Available Jobs</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          )}
-          
           {/* Settings Section */}
           {activeSection === 'settings' && (
             <Card>
@@ -681,12 +553,6 @@ function DashboardContent() {
                           <ArrowRightIcon className="h-4 w-4" />
                         </div>
                       </Link>
-                      <div className="block p-3 border rounded hover:bg-gray-50 cursor-pointer">
-                        <div className="flex justify-between items-center">
-                          <span>Notification Preferences</span>
-                          <ArrowRightIcon className="h-4 w-4" />
-                        </div>
-                      </div>
                     </div>
                   </div>
                   
