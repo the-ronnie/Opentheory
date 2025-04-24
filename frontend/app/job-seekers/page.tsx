@@ -6,7 +6,7 @@ import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { useUser } from '../../components/auth/UserProvider';
-import Navbar from "@/components/navbar"
+import Navbar from "../../components/navbar"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { Download, FileText, Plus, Search, Trash2, User } from "lucide-react"
 import {

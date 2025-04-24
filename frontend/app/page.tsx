@@ -526,7 +526,7 @@ function AuthenticatedView({ username }: { username: string }) {
     data: jobs = [], 
     isLoading: isLoadingJobs, 
     error: jobsError 
-  } = useGetAllActiveJobsQuery({ limit: 10, offset: 0 }) || {};
+  } = useGetAllActiveJobsQuery({ limit: 20, offset: 0 }) || {};
   
   // Fetch user activities
   const { 

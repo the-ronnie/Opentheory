@@ -29,7 +29,7 @@ function DashboardContent() {
   const [activeSection, setActiveSection] = useState('overview');
   
   const { data: recentJobs, isLoading: isLoadingJobs } = 
-    useGetAllActiveJobsQuery({ limit: 5 });
+    useGetAllActiveJobsQuery({ limit: 20 });
 
   const { data: jobSeekers, isLoading: isLoadingJobSeekers } = 
     useGetJobSeekersForConsultantQuery({
@@ -84,11 +84,11 @@ function DashboardContent() {
       return 0;
     }
     
-    // Count jobs that match at least one job seeker with at least 20% skill match
+    // Count jobs that match at least one job seeker with at least 50% skill match
     const matchingJobsCount = recentJobs.filter(job => {
       return jobSeekers.some(seeker => {
         const matchPercentage = calculateMatchPercentage(seeker.skills, job.skills);
-        return matchPercentage >= 20; // Consider it a match if at least 20% skills match
+        return matchPercentage >= 50; // Consider it a match if at least 50% skills match
       });
     }).length;
     
@@ -101,13 +101,13 @@ function DashboardContent() {
       return 0;
     }
     
-    // Count all job-seeker pairs that have at least 20% skill match
+    // Count all job-seeker pairs that have at least 50% skill match
     let potentialMatchesCount = 0;
     
     recentJobs.forEach(job => {
       jobSeekers.forEach(seeker => {
         const matchPercentage = calculateMatchPercentage(seeker.skills, job.skills);
-        if (matchPercentage >= 20) {
+        if (matchPercentage >= 50) {
           potentialMatchesCount++;
         }
       });
@@ -169,9 +169,9 @@ function DashboardContent() {
                     Add New Job Seeker <ArrowRightIcon className="h-3 w-3" />
                   </Button>
                 </Link>
-                <Link href="/jobs/search">
+                <Link href="/jobs">
                   <Button variant="outline" size="sm" className="w-full justify-between">
-                    Search Jobs <ArrowRightIcon className="h-3 w-3" />
+                    View Jobs <ArrowRightIcon className="h-3 w-3" />
                   </Button>
                 </Link>
               </div>
